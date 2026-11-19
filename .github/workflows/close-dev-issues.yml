@@ -1,0 +1,34 @@
+name: Close issues after merge to dev
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [closed]
+
+jobs:
+  close-issues:
+    if: github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Close issues listed in the PR body
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          issue_numbers=$(jq -r '
+            (.pull_request.body // "")
+            | [split("\n")[] | capture("^Closes[ \t]+#(?<number>[1-9][0-9]*)[ \t\r]*$"; "i").number]
+            | unique[]
+          ' "$GITHUB_EVENT_PATH")
+
+          while IFS= read -r number; do
+            [[ -n "$number" ]] || continue
+
+            endpoint="repos/$GITHUB_REPOSITORY/issues/$number"
+            is_open_issue=$(gh api "$endpoint" --jq '.state == "open" and (has("pull_request") | not)')
+            if [[ "$is_open_issue" == true ]]; then
+              gh api --method PATCH "$endpoint" -f state=closed -f state_reason=completed --silent
+              echo "Closed issue #$number"
+            fi
+          done <<< "$issue_numbers"
