@@ -1,0 +1,36 @@
+# macOS
+# Finder의 폴더 보기 설정과 파일 메타데이터
+.DS_Store
+._*
+# Spotlight 검색 인덱스와 휴지통
+.Spotlight-V100/
+.Trashes/
+
+# Windows
+# 탐색기의 미리보기 캐시와 폴더 표시 설정
+Thumbs.db
+Desktop.ini
+# 드라이브별 휴지통
+$RECYCLE.BIN/
+
+# IntelliJ IDEA
+# IDE가 생성하는 프로젝트 설정과 모듈·작업 공간 파일
+.idea/
+*.iml
+*.ipr
+*.iws
+# IntelliJ 컴파일 결과물
+/out/
+
+# Gradle
+# 프로젝트별 캐시와 빌드 결과물. gradle/wrapper/는 팀이 함께 사용하므로 커밋한다.
+.gradle/
+/build/
+
+# 환경변수와 인증 파일
+# 로컬 환경변수 파일은 제외하고, 팀에 공유할 예시 파일은 추적한다.
+.env
+.env.*
+!.env.example
+# AWS 접속 키 등 PEM 형식의 인증 파일
+*.pem
