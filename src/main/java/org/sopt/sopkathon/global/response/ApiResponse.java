@@ -12,19 +12,6 @@ public class ApiResponse<T> {
 		this.data = data;
 	}
 
-	public static <T> ApiResponse<T> success(SuccessCode successCode, T data) {
-		return new ApiResponse<>(
-			successCode.getCode(),
-			successCode.getMessage(),
-			data
-		);
-	}
-
-	public static ApiResponse<Void> success(SuccessCode successCode) {
-		return success(successCode, null);
-	}
-
-
 	public String getCode() {
 		return code;
 	}
@@ -37,5 +24,32 @@ public class ApiResponse<T> {
 		return data;
 	}
 
+	public static <T> ApiResponse<T> success(SuccessCode successCode, T data) {
+		return new ApiResponse<>(
+			successCode.getCode(),
+			successCode.getMessage(),
+			data
+		);
+	}
+
+	public static ApiResponse<Void> success(SuccessCode successCode) {
+		return success(successCode, null);
+	}
+
+	public static ApiResponse<Void> fail(ErrorCode errorCode) {
+		return new ApiResponse<>(
+			errorCode.getCode(),
+			errorCode.getMessage(),
+			null
+		);
+	}
+
+	public static ApiResponse<Void> fail(ErrorCode errorCode, String message) {
+		return new ApiResponse<>(
+			errorCode.getCode(),
+			message,
+			null
+		);
+	}
 
 }
