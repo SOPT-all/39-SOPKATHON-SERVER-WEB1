@@ -52,6 +52,10 @@ public class Story {
 	@Column(name = "image_url", length = 300)
 	private String imageUrl;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "story_status", nullable = false, length = 20)
+	private StoryStatus status = StoryStatus.DRAFT;
+
 	@OneToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "record_id", nullable = false, unique = true)
 	private Record record;
@@ -67,5 +71,10 @@ public class Story {
 		this.prologue = prologue;
 		this.imageUrl = imageUrl;
 		this.record = record;
+	}
+
+	public static Story draft(String title, StoryCategory category, String background, String summary,
+		String character, String event, Record record) {
+		return new Story(title, category, background, summary, character, event, null, null, record);
 	}
 }
