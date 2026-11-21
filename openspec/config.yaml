@@ -1,0 +1,8 @@
+schema: spec-driven
+
+context: |
+  Language: Korean
+  All artifacts must be written in Korean.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  클라이언트가 참고하는 API 계약은 팀 노션 명세를 원본으로 삼는다.
+  변경 제안에는 해당 명세 링크와 이번에 바뀌는 동작·완료 조건을 기록한다.
