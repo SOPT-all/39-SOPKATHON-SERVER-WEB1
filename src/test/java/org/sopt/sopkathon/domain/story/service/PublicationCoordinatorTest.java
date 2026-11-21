@@ -143,6 +143,13 @@ class PublicationCoordinatorTest {
 		assertThrows(IllegalArgumentException.class, () -> new PublicationConfig().publicationClock(invalid));
 	}
 
+	@Test
+	void legacyPublishedStoryWithoutHashIsNotRepublished() {
+		jdbc.update("update story set story_status = 'PUBLISHED'");
+		assertCode(ErrorCode.IDEMPOTENCY_KEY_CONFLICT, () -> acquire(REQUEST));
+		assertNull(coordinator.observe(uuid).token());
+	}
+
 	private PublicationClaim acquire(PublishStoryRequest request) {
 		return coordinator.acquire(uuid, request, request.requestHash());
 	}
