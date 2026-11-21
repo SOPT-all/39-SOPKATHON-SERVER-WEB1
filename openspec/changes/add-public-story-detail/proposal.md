@@ -23,7 +23,7 @@
 
 ## Impact
 
-- 대상: 이슈 #23, Story의 repository·service·controller, 상세 응답 DTO, 공통 `ErrorCode`와 관련 테스트.
+- 대상: 이슈 #24, Story의 repository·service·controller, 상세 응답 DTO, 공통 `ErrorCode`와 관련 테스트.
 - 공개 범위는 [ADR 0002](../../../docs/adr/0002-이야기-초안과-공개-상태를-story의-생명주기로-관리한다.md)의 PUBLISHED 규칙을 따른다.
 - API 원본: [팀 API 명세](https://app.notion.com/p/API-450fa71b42ef82218dd981f6ec53fa8e), [공통 응답 계약](https://app.notion.com/p/41dfa71b42ef80baa568cee9dbaf6002).
 - 완료 기준: 공개 필드, 초안·없는 ID의 404, 잘못된 ID의 400을 자동 테스트로 증명하고 Java 21 clean build를 통과한다.
