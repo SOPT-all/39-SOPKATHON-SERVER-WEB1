@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.sopt.sopkathon.domain.chat.entity.Chat;
 import org.sopt.sopkathon.domain.chat.entity.ChatType;
 import org.sopt.sopkathon.domain.context.entity.Context;
@@ -283,6 +285,14 @@ class MessageFlowTest {
 			assertEquals(i == 10 ? OPENING : null, input.get("openingScene").asString(null));
 			assertEquals(JSON.valueToTree(List.of(EVENT)), input.get("events"));
 		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(longs = {0, -1})
+	void rejectsNonPositiveStoryIdBeforeCallingAi(long id) throws Exception {
+		assertEquals("INVALID_PARAMETER", send(id, openingId, "안녕", 400).get("code").asString());
+		assertTrue(requests.isEmpty());
+		assertTrue(sceneRequests.isEmpty());
 	}
 
 	@Test

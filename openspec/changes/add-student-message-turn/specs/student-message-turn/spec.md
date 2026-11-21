@@ -10,6 +10,10 @@
 
 시스템은 인증 없이 이야기 ID, 학생 원문, 마지막으로 확인한 메시지 ID를 받아야 한다(SHALL). 요청 필드와 응답 구조는 [6번 API 명세](https://app.notion.com/p/41f14af65e06812aba4bc3b79540d8bb)를 따른다.
 
+#### Scenario: 이야기 ID 검증
+- **WHEN** 경로의 이야기 ID가 양의 64비트 정수의 십진 숫자 표기가 아니다
+- **THEN** 조회 API와 동일하게 400 INVALID_PARAMETER를 반환한다
+
 #### Scenario: 본문 검증
 - **WHEN** 필수 본문 값이 없거나 원문이 공백뿐이거나 500 유니코드 코드 포인트를 넘는다
 - **THEN** 400 INVALID_INPUT을 반환하며 AI 호출과 저장을 수행하지 않는다
