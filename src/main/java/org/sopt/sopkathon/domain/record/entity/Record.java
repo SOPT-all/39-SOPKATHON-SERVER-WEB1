@@ -6,9 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Entity
 @Table(name = "record")
+@Getter
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class Record {
 
 	@Id
@@ -22,23 +27,8 @@ public class Record {
 	@Column(name = "record_uuid")
 	private String uuid;
 
-	protected Record() {
-	}
-
 	public Record(String text, String uuid) {
 		this.text = text;
 		this.uuid = uuid;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getText() {
-		return text;
-	}
-
-	public String getUuid() {
-		return uuid;
 	}
 }

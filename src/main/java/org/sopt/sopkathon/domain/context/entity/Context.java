@@ -11,10 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.sopt.sopkathon.domain.story.entity.Story;
 
 @Entity
 @Table(name = "context")
+@Getter
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class Context {
 
 	@Id
@@ -33,28 +38,9 @@ public class Context {
 	@JoinColumn(name = "story_id", nullable = false)
 	private Story story;
 
-	protected Context() {
-	}
-
 	public Context(ContextType type, String text, Story story) {
 		this.type = type;
 		this.text = text;
 		this.story = story;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public ContextType getType() {
-		return type;
-	}
-
-	public String getText() {
-		return text;
-	}
-
-	public Story getStory() {
-		return story;
 	}
 }

@@ -11,10 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.sopt.sopkathon.domain.record.entity.Record;
 
 @Entity
 @Table(name = "story")
+@Getter
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class Story {
 
 	@Id
@@ -45,9 +50,6 @@ public class Story {
 	@JoinColumn(name = "record_id", nullable = false, unique = true)
 	private Record record;
 
-	protected Story() {
-	}
-
 	public Story(String title, StoryCategory category, String background, String character,
 		String event, String prologue, Record record) {
 		this.title = title;
@@ -57,37 +59,5 @@ public class Story {
 		this.event = event;
 		this.prologue = prologue;
 		this.record = record;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public StoryCategory getCategory() {
-		return category;
-	}
-
-	public String getBackground() {
-		return background;
-	}
-
-	public String getCharacter() {
-		return character;
-	}
-
-	public String getEvent() {
-		return event;
-	}
-
-	public String getPrologue() {
-		return prologue;
-	}
-
-	public Record getRecord() {
-		return record;
 	}
 }

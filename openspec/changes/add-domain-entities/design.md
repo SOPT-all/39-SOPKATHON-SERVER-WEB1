@@ -12,7 +12,7 @@
 
 ## Decisions
 
-- 도메인별 `domain/{record,story,chat,context}/entity` 패키지에 엔티티를 둔다. 기존 코드처럼 Lombok 없이 protected 기본 생성자, 생성에 필요한 public 생성자, getter를 제공한다.
+- 도메인별 `domain/{record,story,chat,context}/entity` 패키지에 엔티티를 둔다. Lombok `Getter`와 `RequiredArgsConstructor(access = PROTECTED)`로 getter와 JPA 기본 생성자를 생성한다. 엔티티 필드에 final 또는 NonNull을 추가하지 않아 기존 null 허용 조건을 유지하고, 값을 받는 public 생성자는 명시적으로 제공한다. StoryCategory는 final displayName 필드에 대한 생성자와 getter를 Lombok으로 생성한다.
 - PK는 Long/IDENTITY로 매핑한다. 수동 식별자 지정 대신 DB가 각 레코드의 식별자를 생성한다.
 - 사용자 확인에 따라 세계관의 녹음 참조는 단방향 `OneToOne(fetch = LAZY, optional = false)`와 `JoinColumn(nullable = false, unique = true)`로 매핑한다. 녹음만 먼저 저장할 수 있고, 같은 녹음에 두 번째 세계관을 저장하는 것은 DB 유일성 제약으로 거부한다. 채팅·맥락의 세계관 참조는 단방향 `ManyToOne(fetch = LAZY, optional = false)`와 `JoinColumn(nullable = false)`로 매핑한다. 양방향 컬렉션과 cascade는 현재 요구가 없어 추가하지 않는다.
 - 문자열 길이·TEXT·nullable은 ERD대로 명시한다. `record_uuid`는 길이가 정의되지 않아 JPA 기본 255자를 사용한다. 세계관의 `record_id` 외에는 추가 unique 제약을 만들지 않는다.

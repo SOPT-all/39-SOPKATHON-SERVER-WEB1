@@ -1,5 +1,10 @@
 package org.sopt.sopkathon.domain.story.entity;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum StoryCategory {
 	HORROR("공포"),
 	ROMANCE("로맨스"),
@@ -9,12 +14,4 @@ public enum StoryCategory {
 	ETC("기타");
 
 	private final String displayName;
-
-	StoryCategory(String displayName) {
-		this.displayName = displayName;
-	}
-
-	public String getDisplayName() {
-		return displayName;
-	}
 }
