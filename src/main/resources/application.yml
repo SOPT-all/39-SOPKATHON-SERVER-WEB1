@@ -1,6 +1,8 @@
 spring:
   application:
     name: sopkathon
+  profiles:
+    default: local
 
 server:
   forward-headers-strategy: framework
