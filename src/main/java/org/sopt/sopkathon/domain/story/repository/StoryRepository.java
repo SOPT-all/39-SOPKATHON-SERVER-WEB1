@@ -1,6 +1,9 @@
 package org.sopt.sopkathon.domain.story.repository;
 
+import java.util.List;
+
 import org.sopt.sopkathon.domain.story.entity.Story;
+import org.sopt.sopkathon.domain.story.entity.StoryStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
@@ -20,4 +23,6 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
 		from Story s join s.record r where r.uuid = :uuid
 		""")
 	Optional<PublicationSnapshot> publicationSnapshot(@Param("uuid") String uuid);
+
+	List<Story> findAllByStatusOrderByIdDesc(StoryStatus status);
 }
