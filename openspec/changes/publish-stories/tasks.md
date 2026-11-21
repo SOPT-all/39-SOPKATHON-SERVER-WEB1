@@ -20,7 +20,7 @@
 ## 4. 문서와 마무리
 
 - [x] 4.1 README에 확정 호출·설정·운영 스키마 적용·장애 복구의 보장 범위를 기록하고 ADR·문서 링크를 검증한다. 기존 사용자 미커밋 파일이 변경·커밋되지 않았는지 확인한다.
-- [ ] 4.2 Java 21 clean build, OpenSpec strict, adrs doctor, git diff 검증을 마치고 실제 OpenAI/MySQL 미검증 여부를 구분하여 dev 대상 PR을 생성한다.
+- [x] 4.2 Java 21 clean build, OpenSpec strict, adrs doctor, git diff 검증을 마치고 실제 OpenAI/MySQL 미검증 여부를 구분하여 dev 대상 PR을 생성한다.
 
 ## Workflow follow-up
 
