@@ -24,6 +24,8 @@ OpenAI Responses API와 구조화 출력을 사용한다. 키는 담당자가 �
 | OPENAI_READ_TIMEOUT | 60s | 응답 대기 제한 시간 |
 | OPENAI_MAX_OUTPUT_TOKENS | 4096 | 생성 토큰 상한 |
 
+연결·응답 제한 시간과 토큰 상한은 양수여야 한다.
+
 키나 모델이 없으면 다른 기능의 서버 기동은 허용하고 초안 요청에 503 AI_UNAVAILABLE을 반환한다. 실패 응답에서는 생성 결과나 원문을 저장하지 않는다. DB 접속은 local/prod 프로파일의 DB_URL, DB_USERNAME, DB_PASSWORD를 사용한다.
 
 Windows PowerShell에서 JDK 21과 로컬 MySQL을 준비하고 위 환경변수를 설정한 뒤 `.\gradlew.bat bootRun`으로 실행한다. [Swagger](http://localhost:8080/swagger-ui/index.html)에서 다음 요청을 보낼 수 있다.
@@ -36,6 +38,12 @@ Content-Type: application/json
 ```
 
 기존 DB에는 story_status와 record_uuid 유일성 제약을 별도로 적용해야 한다. 데이터 분류·중복 점검과 DDL 적용 순서는 [초안 생성 설계의 Migration Plan](openspec/changes/generate-story-drafts/design.md#migration-plan)을 따른다. 새 개발 DB의 스키마 자동 생성은 로컬 실행에만 명시적으로 사용한다.
+
+비어 있는 새 로컬 개발 DB에 한해 다음처럼 엔티티 기반 스키마 생성을 활성화할 수 있다.
+
+```powershell
+.\gradlew.bat bootRun --args="--spring.profiles.active=local --spring.jpa.hibernate.ddl-auto=update"
+```
 
 자동 테스트는 H2와 대역 HTTP 서버·클라이언트를 사용하므로 실제 OpenAI 키나 외부 호출 없이 `.\gradlew.bat test`로 실행할 수 있다. 실제 모델의 원문 보존·소개문 품질은 키와 모델 등록 후 대표 원문으로 별도 확인한다.
 

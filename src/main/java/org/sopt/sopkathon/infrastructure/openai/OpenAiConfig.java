@@ -14,6 +14,12 @@ import tools.jackson.databind.ObjectMapper;
 public class OpenAiConfig {
 	@Bean
 	StoryDraftGenerator storyDraftGenerator(OpenAiProperties properties, ObjectMapper objectMapper) {
+		if (properties.getConnectTimeout() == null || properties.getConnectTimeout().isZero()
+			|| properties.getConnectTimeout().isNegative() || properties.getReadTimeout() == null
+			|| properties.getReadTimeout().isZero() || properties.getReadTimeout().isNegative()
+			|| properties.getMaxOutputTokens() <= 0) {
+			throw new IllegalArgumentException("OpenAI 연결·응답 제한 시간과 토큰 상한은 양수여야 합니다.");
+		}
 		HttpClient httpClient = HttpClient.newBuilder().connectTimeout(properties.getConnectTimeout()).build();
 		JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
 		requestFactory.setReadTimeout(properties.getReadTimeout());

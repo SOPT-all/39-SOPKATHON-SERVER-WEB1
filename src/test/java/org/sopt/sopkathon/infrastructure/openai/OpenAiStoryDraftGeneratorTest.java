@@ -130,7 +130,10 @@ class OpenAiStoryDraftGeneratorTest {
 				"content", List.of(Map.of("type", "refusal", "refusal", "refused")))))),
 			envelope("{}"), envelope(DRAFT.replace("FANTASY", "UNKNOWN")),
 			envelope(DRAFT.replace("\"숲속의 열쇠\"", "123")),
-			envelope(DRAFT.replace("\"숲속의 열쇠\"", "\" \"")));
+			envelope(DRAFT.replace("\"숲속의 열쇠\"", "\" \"")),
+			envelope(DRAFT + " {}"), envelope(DRAFT) + " {}",
+			JSON.writeValueAsString(Map.of("status", "completed", "output", List.of(Map.of("type", "message",
+				"content", Map.of("unexpected", Map.of("type", "output_text", "text", DRAFT)))))));
 	}
 
 	private static String envelope(String text) {

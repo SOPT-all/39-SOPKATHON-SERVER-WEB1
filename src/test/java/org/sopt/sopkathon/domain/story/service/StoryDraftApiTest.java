@@ -108,6 +108,14 @@ class StoryDraftApiTest {
 	}
 
 	@Test
+	void storesOriginalAtUnicodeCodePointBoundary() throws Exception {
+		String original = "🐰".repeat(5000);
+		when(generator.generate(original)).thenReturn(DRAFT);
+		assertEquals(200, send(original).getResponse().getStatus());
+		assertEquals(original, recordRepository.findAll().getFirst().getText());
+	}
+
+	@Test
 	void repeatedTranscriptCreatesIndependentDrafts() throws Exception {
 		when(generator.generate(anyString())).thenReturn(DRAFT);
 		JsonNode first = JSON.readTree(send("같은 원문").getResponse().getContentAsByteArray());

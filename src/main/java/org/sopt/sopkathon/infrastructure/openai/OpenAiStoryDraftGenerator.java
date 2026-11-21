@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -66,7 +67,7 @@ public class OpenAiStoryDraftGenerator implements StoryDraftGenerator {
 		if (response == null || response.isBlank()) {
 			throw unavailable();
 		}
-		JsonNode root = objectMapper.readTree(response);
+		JsonNode root = objectMapper.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(response);
 		if (root == null || !"completed".equals(root.path("status").asString(""))
 			|| !root.path("output").isArray()) {
 			throw unavailable();
@@ -75,6 +76,9 @@ public class OpenAiStoryDraftGenerator implements StoryDraftGenerator {
 		for (JsonNode output : root.path("output")) {
 			if (!"message".equals(output.path("type").asString(""))) {
 				continue;
+			}
+			if (!output.path("content").isArray()) {
+				throw unavailable();
 			}
 			for (JsonNode content : output.path("content")) {
 				String type = content.path("type").asString("");
@@ -89,7 +93,8 @@ public class OpenAiStoryDraftGenerator implements StoryDraftGenerator {
 		if (text.isEmpty()) {
 			throw unavailable();
 		}
-		JsonNode draft = objectMapper.readTree(text.toString());
+		JsonNode draft = objectMapper.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+			.readTree(text.toString());
 		if (draft == null || !draft.isObject() || !Set.copyOf(draft.propertyNames()).equals(FIELDS)) {
 			throw unavailable();
 		}

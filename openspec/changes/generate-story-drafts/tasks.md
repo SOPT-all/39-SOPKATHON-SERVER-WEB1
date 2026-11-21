@@ -21,7 +21,7 @@
 
 ## 4. 통합 확인
 
-- [ ] 4.1 Java 21에서 .\gradlew.bat clean build, openspec validate generate-story-drafts --strict와 git diff --check를 실행한다. PR에 자동 테스트 결과와 실제 OpenAI/MySQL 검증 여부를 구분해 적고, 사용자 로컬 설정과 키가 커밋에 포함되지 않았는지 확인한다.
+- [x] 4.1 Java 21에서 .\gradlew.bat clean build, openspec validate generate-story-drafts --strict와 git diff --check를 실행한다. PR에 자동 테스트 결과와 실제 OpenAI/MySQL 검증 여부를 구분해 적고, 사용자 로컬 설정과 키가 커밋에 포함되지 않았는지 확인한다.
 
 ## Workflow follow-up
 
