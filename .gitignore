@@ -34,3 +34,6 @@ $RECYCLE.BIN/
 !.env.example
 # AWS 접속 키 등 PEM 형식의 인증 파일
 *.pem
+
+# 저장소 전용 adrs 실행 파일
+/.tools/

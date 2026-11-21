@@ -18,3 +18,7 @@
 4. 배포할 기능과 연동을 확인한 뒤 `dev → main` PR을 Merge commit으로 병합한다. 배포 담당자는 서버 기동과 주요 API 응답을 확인한다.
 
 팀 합의를 변경할 때는 [브랜치·커밋 규칙](https://app.notion.com/p/41dfa71b42ef80aca0efcbe615b8f97c), [이슈·PR 양식](https://app.notion.com/p/PR-41dfa71b42ef802686e7e03eee30c2df)과 관련 저장소 템플릿·워크플로를 함께 확인한다.
+
+## 설계 결정
+
+기존 선택의 이유는 [결정 기록](docs/adr/)에서 확인한다. 결정 검색·제안·대체 또는 Codex MCP 설정이 필요하면 [ADR 사용법](docs/adr-guide.md)을 참고한다.
