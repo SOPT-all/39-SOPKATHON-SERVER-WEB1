@@ -94,6 +94,7 @@ jobs:
             docker run -d --name sopkathon --restart unless-stopped \
               -p 127.0.0.1:8080:8080 \
               --env-file ~/sopkathon.env \
+              -e SPRING_PROFILES_ACTIVE=prod \
               "$IMAGE"
             docker logout ghcr.io
             docker image prune -f
