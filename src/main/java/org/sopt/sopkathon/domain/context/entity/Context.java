@@ -43,4 +43,8 @@ public class Context {
 		this.text = text;
 		this.story = story;
 	}
+
+	public void updateText(String text) {
+		this.text = text;
+	}
 }
