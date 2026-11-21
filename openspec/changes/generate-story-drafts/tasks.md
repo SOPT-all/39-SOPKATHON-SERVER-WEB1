@@ -15,9 +15,9 @@
 
 ## 3. HTTP 계약과 원자적 생성
 
-- [ ] 3.1 CreateStoryDraftRequest/Response와 공개 POST /api/v1/story-drafts controller를 구현하고 Swagger 계약을 작성한다. MVC 테스트로 인증 없는 JSON, 잘못된 JSON·transcript 타입의 400, 누락·null·공백의 400, 이모지 포함 5,000/5,001 코드 포인트 경계와 415를 확인한다. 잘못된 요청은 AI와 저장을 호출하지 않아야 한다.
-- [ ] 3.2 StoryDraftService와 별도 transactional StoryDraftWriter를 구현해 UUID 생성, 트랜잭션 밖 LLM 호출·검증, 최초 원문·UUID와 Story(DRAFT) 저장을 연결한다. 통합 테스트로 원문 그대로 저장, 한 Record·한 Story만 커밋, Chat/Context 무생성, LLM 호출 중 DB 트랜잭션 부재, 이야기 저장 실패 시 Record까지 롤백함을 확인한다.
-- [ ] 3.3 커밋 후 저장된 값으로 200 SUCCESS와 recordUuid·여섯 편집 필드를 반환한다. HTTP·DB 통합 테스트로 응답 UUID/각 필드와 저장값 일치, AI 실패 시 무저장, 같은 원문의 별도 성공 요청마다 새 UUID와 DRAFT 생성, 저장 실패 시 성공 응답 부재를 확인한다.
+- [x] 3.1 CreateStoryDraftRequest/Response와 공개 POST /api/v1/story-drafts controller를 구현하고 Swagger 계약을 작성한다. MVC 테스트로 인증 없는 JSON, 잘못된 JSON·transcript 타입의 400, 누락·null·공백의 400, 이모지 포함 5,000/5,001 코드 포인트 경계와 415를 확인한다. 잘못된 요청은 AI와 저장을 호출하지 않아야 한다.
+- [x] 3.2 StoryDraftService와 별도 transactional StoryDraftWriter를 구현해 UUID 생성, 트랜잭션 밖 LLM 호출·검증, 최초 원문·UUID와 Story(DRAFT) 저장을 연결한다. 통합 테스트로 원문 그대로 저장, 한 Record·한 Story만 커밋, Chat/Context 무생성, LLM 호출 중 DB 트랜잭션 부재, 이야기 저장 실패 시 Record까지 롤백함을 확인한다.
+- [x] 3.3 커밋 후 저장된 값으로 200 SUCCESS와 recordUuid·여섯 편집 필드를 반환한다. HTTP·DB 통합 테스트로 응답 UUID/각 필드와 저장값 일치, AI 실패 시 무저장, 같은 원문의 별도 성공 요청마다 새 UUID와 DRAFT 생성, 저장 실패 시 성공 응답 부재를 확인한다.
 
 ## 4. 통합 확인
 
