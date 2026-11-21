@@ -2,6 +2,7 @@ package org.sopt.sopkathon.domain.story.service;
 
 import lombok.RequiredArgsConstructor;
 import org.sopt.sopkathon.domain.story.dto.response.GetStoriesResponse;
+import org.sopt.sopkathon.domain.story.entity.StoryStatus;
 import org.sopt.sopkathon.domain.story.repository.StoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,6 @@ public class StoryService {
 	private final StoryRepository storyRepository;
 
 	public GetStoriesResponse getStories() {
-		return GetStoriesResponse.from(storyRepository.findAllByOrderByIdDesc());
+		return GetStoriesResponse.from(storyRepository.findAllByStatusOrderByIdDesc(StoryStatus.PUBLISHED));
 	}
 }
