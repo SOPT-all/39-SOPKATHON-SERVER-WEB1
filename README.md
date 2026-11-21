@@ -37,7 +37,7 @@ Content-Type: application/json
 {"transcript":"해질 무렵 소나무 숲에서 토끼가 열쇠를 이러버렸어요. 여우를 따라가 풀잎 아래서 열쇠를 찾았어요."}
 ```
 
-기존 DB에는 story_status와 record_uuid 유일성 제약을 별도로 적용해야 한다. 데이터 분류·중복 점검과 DDL 적용 순서는 [초안 생성 설계의 Migration Plan](openspec/changes/generate-story-drafts/design.md#migration-plan)을 따른다. 새 개발 DB의 스키마 자동 생성은 로컬 실행에만 명시적으로 사용한다.
+기존 DB에는 story_status와 record_uuid의 NOT NULL·유일성 제약을 별도로 적용해야 한다. 데이터 분류·UUID 누락·중복 점검과 DDL 적용 순서는 [초안 생성 설계의 Migration Plan](openspec/changes/generate-story-drafts/design.md#migration-plan)을 따른다. 새 개발 DB의 스키마 자동 생성은 로컬 실행에만 명시적으로 사용한다.
 
 비어 있는 새 로컬 개발 DB에 한해 다음처럼 엔티티 기반 스키마 생성을 활성화할 수 있다.
 

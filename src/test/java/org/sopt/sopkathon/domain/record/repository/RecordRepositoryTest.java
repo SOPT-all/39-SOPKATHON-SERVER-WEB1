@@ -25,11 +25,17 @@ class RecordRepositoryTest {
 	}
 
 	@Test
-	void allowsDistinctUuidsAndPreservesNullableAttributes() {
+	void rejectsNullUuid() {
+		assertThrows(DataIntegrityViolationException.class,
+			() -> repository.saveAndFlush(new Record("원문", null)));
+	}
+
+	@Test
+	void allowsDistinctUuidsAndNullableText() {
 		repository.saveAndFlush(new Record("같은 원문", "first-uuid"));
 		repository.saveAndFlush(new Record("같은 원문", "second-uuid"));
-		repository.saveAndFlush(new Record(null, null));
-		repository.saveAndFlush(new Record(null, null));
+		repository.saveAndFlush(new Record(null, "third-uuid"));
+		repository.saveAndFlush(new Record(null, "fourth-uuid"));
 		assertEquals(4, repository.count());
 	}
 }

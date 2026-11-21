@@ -5,7 +5,7 @@
 ## 1. 초안 도메인과 저장 제약
 
 - [x] 1.1 StoryStatus(DRAFT/PUBLISHED), 필수 story_status 컬럼과 초안 생성 팩토리를 추가하고 기존 생성자 사용처를 정리한다. 도메인·영속성 테스트로 DRAFT 기본값, 1:1 관계, 첫 장면·이미지 URL의 null 및 기존 매핑 호환성을 확인한다.
-- [x] 1.2 RecordRepository·StoryRepository와 record_uuid 유일성 제약을 추가하되 기존 길이·nullable 조건을 유지한다. DB 테스트로 동일 UUID 거부와 다른 UUID 저장을 검증하고, 기존 데이터가 있는 경우의 상태 분류·중복 점검 및 스키마 적용 절차를 design.md에 구체화한다.
+- [x] 1.2 RecordRepository·StoryRepository와 record_uuid의 NOT NULL·유일성 제약을 적용하되 기존 길이와 원문 null 허용 조건은 유지한다. DB 테스트로 null·동일 UUID 거부와 다른 UUID 저장을 검증하고, 기존 데이터가 있는 경우의 상태 분류·UUID 누락·중복 점검 및 스키마 적용 절차를 design.md에 구체화한다.
 
 ## 2. OpenAI 초안 생성
 
