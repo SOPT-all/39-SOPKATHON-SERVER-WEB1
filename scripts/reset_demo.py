@@ -39,10 +39,22 @@ def seed_tables(sql):
             if "context" in found:
                 raise ValueError("초기 데이터 변경 SQL을 검토하세요.")
             continue
-        insert = re.fullmatch(r"INSERT INTO (\w+) (\([\w, ]+\)) VALUES\s+(.+)\s+ON DUPLICATE KEY UPDATE (\w+) = \4", body, re.S)
-        if not insert or insert[1] not in TABLES:
-            raise ValueError("지원하지 않는 시드 구문")
-        table, columns, rows = insert.group(1, 2, 3)
+        # Startup stages chat rows to preserve live cursors. Reset always targets empty tables.
+        chat_columns = "chat_id, chat_type, chat_text, story_id"
+        if body in (
+            f"CREATE TEMPORARY TABLE seed_chat AS SELECT {chat_columns} FROM chat WHERE 1 = 0",
+            f"INSERT INTO chat ({chat_columns})\nSELECT {chat_columns} FROM seed_chat WHERE NOT EXISTS (SELECT 1 FROM chat)",
+            "DROP TABLE seed_chat",
+        ):
+            continue
+        staged_chat = f"INSERT INTO seed_chat ({chat_columns}) VALUES"
+        if body.startswith(staged_chat):
+            table, columns, rows = "chat", f"({chat_columns})", body[len(staged_chat):]
+        else:
+            insert = re.fullmatch(r"INSERT INTO (\w+) (\([\w, ]+\)) VALUES\s+(.+)\s+ON DUPLICATE KEY UPDATE (\w+) = \4", body, re.S)
+            if not insert or insert[1] not in TABLES:
+                raise ValueError("지원하지 않는 시드 구문")
+            table, columns, rows = insert.group(1, 2, 3)
         literal = "(?:" + token + r"|-?\d+|NULL)"
         row = r"\(\s*" + literal + r"(?:\s*,\s*" + literal + r")*\s*\)"
         if not re.fullmatch(row + r"(?:\s*,\s*" + row + r")*", rows.strip(), re.S):

@@ -49,7 +49,7 @@ Content-Type: application/json
 
 기존 DB에는 story_status와 record_uuid의 NOT NULL·유일성 제약을 별도로 적용해야 한다. 데이터 분류·UUID 누락·중복 점검과 DDL 적용 순서는 [초안 생성 설계의 Migration Plan](openspec/changes/generate-story-drafts/design.md#migration-plan)을 따른다. 로컬의 `update`도 기존 데이터 분류나 UUID 누락·중복 해결을 대신하지 않는다.
 
-local·prod 프로파일은 서버 시작 시 `src/main/resources/data.sql`의 목데이터를 넣는다. 같은 ID가 이미 있으면 덮어쓰지 않고 건너뛴다.
+local·prod 프로파일은 서버 시작 시 `src/main/resources/data.sql`의 목데이터를 넣는다. 채팅은 테이블이 비었을 때만 채운다. 1번은 첫 장면과 기존 대화 10건, 2~6번은 첫 장면 한 건씩으로 시작한다. 기존 DB의 메시지 번호는 재기동 시 보존되며, 새 기준 상태로 바꾸려면 [시연 DB 초기화](#시연-db-초기화)를 실행한다.
 
 로컬은 `update`가 기본 적용되므로 다음처럼 실행한다. 운영 DB를 DB_URL에 지정한 상태로 local 프로파일을 실행하지 않는다.
 
