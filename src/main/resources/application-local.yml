@@ -2,12 +2,18 @@ spring:
   config:
     import: "optional:file:./.env[.properties]"
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/sopkathon?createDatabaseIfNotExist=true}
