@@ -26,7 +26,7 @@ OpenAI Responses API와 구조화 출력을 사용한다. 키는 담당자가 �
 
 연결·응답 제한 시간과 토큰 상한은 양수여야 한다.
 
-키나 모델이 없으면 다른 기능의 서버 기동은 허용하고 초안 요청에 503 AI_UNAVAILABLE을 반환한다. 실패 응답에서는 생성 결과나 원문을 저장하지 않는다. DB 접속은 local/prod 프로파일의 DB_URL, DB_USERNAME, DB_PASSWORD를 사용한다.
+키나 모델이 없으면 다른 기능의 서버 기동은 허용하고 초안 생성·이야기 확정의 AI 호출에 503 AI_UNAVAILABLE을 반환한다. 초안 생성 실패 시 생성 결과나 원문을 저장하지 않는다. DB 접속은 local/prod 프로파일의 DB_URL, DB_USERNAME, DB_PASSWORD를 사용한다.
 
 Windows PowerShell에서 JDK 21과 로컬 MySQL을 준비하고 위 환경변수를 설정한 뒤 `.\gradlew.bat bootRun`으로 실행한다. [Swagger](http://localhost:8080/swagger-ui/index.html)에서 다음 요청을 보낼 수 있다.
 
@@ -46,6 +46,42 @@ Content-Type: application/json
 ```
 
 자동 테스트는 H2와 대역 HTTP 서버·클라이언트를 사용하므로 실제 OpenAI 키나 외부 호출 없이 `.\gradlew.bat test`로 실행할 수 있다. 실제 모델의 원문 보존·소개문 품질은 키와 모델 등록 후 대표 원문으로 별도 확인한다.
+
+## 편집한 이야기 확정
+
+`POST /api/v1/stories`는 초안 응답의 UUID를 `Idempotency-Key` 헤더로 받고 기존 Story를 공개 확정한다. 최초 원문과 최종 편집값을 보내면 첫 장면과 학생 질문 하나를 생성하고, 최종값·첫 STORY 메시지·PUBLISHED 전환을 한 트랜잭션에 저장한다. Record와 Story ID, 최초 원문은 유지한다. 작성자의 추가 확인 단계는 없다.
+
+```http
+POST /api/v1/stories
+Content-Type: application/json
+Idempotency-Key: e91ce7a5-f15b-434d-988c-8c704ed41693
+
+{
+  "transcript": "해질 무렵 소나무 숲에서 토끼가 열쇠를 이러버렸어요. 여우를 따라가 풀잎 아래서 열쇠를 찾았어요.",
+  "title": "토끼와 여우의 열쇠 찾기",
+  "summary": "열쇠를 잃어버린 토끼가 여우를 만나요.",
+  "setting": "해 질 무렵의 소나무 숲",
+  "characters": "주인공은 토끼다. 여우는 토끼에게 길을 안내한다.",
+  "coreEvent": "토끼가 숲에서 잃어버린 열쇠를 찾는다.",
+  "category": "FANTASY"
+}
+```
+
+예시 UUID는 실제 초안 응답 값으로 교체한다. 원문은 5,000 코드 포인트, 제목은 20자, 소개문·배경은 200자, 인물은 100자, 사건은 500자까지이며 모두 공백이 아닌 문자열이어야 한다. 카테고리는 HORROR, ROMANCE, THRILLER, ACTION, FANTASY, ETC 중 하나이다.
+
+최초 확정은 201 CREATED, 같은 키·필드값의 재시도는 200 SUCCESS와 `data.storyId`만 반환한다. JSON 키 순서는 무관하며 최초 transcript도 비교한다. 동일 동시 요청은 생성 결과를 공유하고 첫 메시지를 한 번 저장한다. 처리 중이거나 확정된 키에 다른 값을 보내면 409 IDEMPOTENCY_KEY_CONFLICT이다. 없는 UUID는 404 RESOURCE_NOT_FOUND, 첫 확정의 원문 불일치는 400 INVALID_INPUT, 키 누락·형식 오류는 400 INVALID_PARAMETER이다.
+
+생성 실패는 503 AI_UNAVAILABLE, DB 저장 실패는 500 INTERNAL_SERVER_ERROR이다. 실패 시 초안의 기존 필드를 유지하고 첫 메시지를 남기지 않는다. 대기 시간 초과나 처리자 실패를 기다린 요청도 503으로 끝나며, 프론트는 같은 키·본문으로 별도 재시도한다. 실패한 시도를 기다리던 요청이 자동으로 새 AI 생성을 시작하지 않는다.
+
+| 환경변수 | 기본값 | 용도 |
+| --- | --- | --- |
+| STORY_PUBLICATION_LEASE | 120s | DB 처리 권한 유효 기간 |
+| STORY_PUBLICATION_WAIT_TIMEOUT | 75s | 동일 요청의 결과 대기 상한 |
+| STORY_PUBLICATION_POLL_INTERVAL | 100ms | 대기 중 DB 조회 간격 |
+
+세 값은 양수여야 한다. 실제 유효 기간은 설정값과 `OPENAI_CONNECT_TIMEOUT + OPENAI_READ_TIMEOUT + 30s` 중 큰 값이다. 생성과 대기는 DB 트랜잭션 밖에서 수행하고, 짧은 잠금으로 권한 획득과 최종 저장을 조정한다. 중단된 처리 권한은 만료 후 새 요청이 회수하며 이전 토큰은 저장하거나 새 토큰을 해제할 수 없다. 서버 중단·응답 유실 후 외부 AI 호출은 반복될 수 있고, DB 공개와 첫 메시지 저장의 중복을 방지한다.
+
+기존 DB는 배포 전에 [확정 설계의 Migration Plan](openspec/changes/publish-stories/design.md#migration-plan)에 있는 nullable 컬럼 세 개를 적용한다. 기존 PUBLISHED에 요청 해시가 없으면 재확정을 409로 거부하므로 기존 데이터도 확인한다. 결정의 이유는 [ADR 0003](docs/adr/0003-이야기-확정의-멱등성과-동시-요청을-db에서-관리한다.md)을 참조한다. 실제 OpenAI의 문장 품질과 MySQL의 잠금 동작은 해당 환경에서 별도 확인하며 자동 테스트는 H2 MySQL 모드와 HTTP 대역을 사용한다.
 
 ## 팀 협업
 

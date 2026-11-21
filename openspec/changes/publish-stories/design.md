@@ -16,6 +16,7 @@ PR #21이 dev에 병합되었다. Story는 DRAFT/PUBLISHED, Record는 원문·�
 - 본문 해시는 검증된 필드의 고정 순서 JSON 배열을 UTF-8로 직렬화한 SHA-256이다. 최초 transcript와 여섯 최종값을 포함한다. PUBLISHED/진행 중 해시 차이는 원문 불일치 400보다 우선하여 409이다. 새 DRAFT의 최초 원문 차이는 400이다.
 - Story에 publish_request_hash(varchar64), publish_attempt_token(varchar36), publish_attempt_expires_at(timestamp)를 nullable로 추가한다. 상태는 두 값만 유지한다. 최초 UUID와 Record는 수정하지 않는다.
 - PublicationCoordinator의 짧은 transactional 메서드가 UUID의 Story와 Record를 join fetch하고 PESSIMISTIC_WRITE로 잠근다. PUBLISHED면 같은 해시에 결과를 재사용한다. 유효한 토큰이 있으면 같은 해시에 WAIT, 다른 해시에 409이다. 토큰이 없거나 만료됐으면 최초 원문을 확인하고 새 토큰·해시·만료를 기록해 OWNER를 반환한다.
+- OpenEntityManagerInView가 같은 HTTP 요청에서 이전 시도의 엔티티를 보관할 수 있으므로 잠금 획득 뒤 refresh로 최신 권한을 읽는다. 대기 조회는 엔티티 대신 새 DTO projection으로 읽어 다른 트랜잭션의 커밋을 관찰한다.
 - StoryPublicationService는 트랜잭션 없이 OWNER만 AI를 호출한다. WAIT는 별도 read-only 트랜잭션으로 결과를 관찰하고 잠금 없이 poll한다. 기본 대기 75초, poll 100ms이다. 처리 표시가 없어지거나 토큰이 바뀌면 503으로 끝내고 자동 재생성하지 않는다. 인터럽트도 복원 후 503으로 처리한다.
 - 기본 처리 유효 기간은 120초이며 실제 적용은 max(설정값, OpenAI connect+read timeout+30초)이다. Clock을 주입해 만료를 테스트한다. 만료를 회수하는 것은 새 HTTP 요청이며 대기 루프에서 자동 회수하지 않는다. 소유권은 최종 저장 시 토큰·해시·만료 모두 확인한다.
 - 확정 writer는 별도 빈·트랜잭션에서 Story를 다시 잠가 소유권을 확인하고 최종 편집값·prologue=scene·Chat(STORY, scene+줄바꿈+question) 한 건·PUBLISHED를 커밋한다. 토큰·만료는 지우고 해시는 유지한다. 저장 오류는 모두 롤백한다.
