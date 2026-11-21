@@ -1,8 +1,11 @@
 ---
 number: 2
-title: "이야기 초안과 공개 상태를 Story의 생명주기로 관리한다"
+title: 이야기 초안과 공개 상태를 Story의 생명주기로 관리한다
 status: proposed
 date: 2026-11-22
+links:
+- target: 3
+  kind: RelatesTo
 ---
 
 # 이야기 초안과 공개 상태를 Story의 생명주기로 관리한다
