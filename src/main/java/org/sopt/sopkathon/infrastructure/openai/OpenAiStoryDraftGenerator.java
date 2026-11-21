@@ -8,17 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.sopt.sopkathon.domain.story.dto.response.GenerateStoryDraftResponse;
 import org.sopt.sopkathon.domain.story.entity.StoryCategory;
 import org.sopt.sopkathon.domain.story.service.StoryDraftGenerator;
-import org.sopt.sopkathon.domain.story.validation.StoryDraftText;
 import org.sopt.sopkathon.global.exception.BusinessException;
 import org.sopt.sopkathon.global.response.ErrorCode;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor
 public class OpenAiStoryDraftGenerator implements StoryDraftGenerator {
@@ -38,74 +30,18 @@ public class OpenAiStoryDraftGenerator implements StoryDraftGenerator {
 		category를 제외한 모든 값은 한국어의 공백이 아닌 문자열이어야 합니다.
 		""";
 
-	private final RestClient client;
-	private final OpenAiProperties properties;
-	private final ObjectMapper objectMapper;
+	private final OpenAiResponsesClient responses;
 
 	@Override
 	public GenerateStoryDraftResponse generate(String transcript) {
-		if (!StoryDraftText.hasText(properties.getApiKey()) || !StoryDraftText.hasText(properties.getModel())) {
-			throw unavailable();
-		}
 		try {
-			String response = client.post().uri("/responses")
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + properties.getApiKey())
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(Map.of("model", properties.getModel(), "instructions", INSTRUCTIONS,
-					"input", transcript, "store", false, "max_output_tokens", properties.getMaxOutputTokens(),
-					"text", Map.of("format", Map.of("type", "json_schema", "name", "story_draft",
-						"strict", true, "schema", schema()))))
-				.retrieve().body(String.class);
-			return parse(response).validated();
-		} catch (RestClientException | JacksonException | IllegalArgumentException e) {
-			// 외부 오류 본문에 원문이나 인증 정보가 포함될 수 있어 응답·로그에 전달하지 않는다.
+			JsonNode draft = responses.generate(INSTRUCTIONS, transcript, "story_draft", schema(), FIELDS);
+			return new GenerateStoryDraftResponse(draft.get("title").stringValue(), draft.get("summary").stringValue(),
+				draft.get("setting").stringValue(), draft.get("characters").stringValue(),
+				StoryCategory.valueOf(draft.get("category").stringValue()), draft.get("coreEvent").stringValue()).validated();
+		} catch (IllegalArgumentException e) {
 			throw unavailable();
 		}
-	}
-
-	private GenerateStoryDraftResponse parse(String response) {
-		if (response == null || response.isBlank()) {
-			throw unavailable();
-		}
-		JsonNode root = objectMapper.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(response);
-		if (root == null || !"completed".equals(root.path("status").asString(""))
-			|| !root.path("output").isArray()) {
-			throw unavailable();
-		}
-		StringBuilder text = new StringBuilder();
-		for (JsonNode output : root.path("output")) {
-			if (!"message".equals(output.path("type").asString(""))) {
-				continue;
-			}
-			if (!output.path("content").isArray()) {
-				throw unavailable();
-			}
-			for (JsonNode content : output.path("content")) {
-				String type = content.path("type").asString("");
-				if ("refusal".equals(type)) {
-					throw unavailable();
-				}
-				if ("output_text".equals(type) && content.path("text").isString()) {
-					text.append(content.path("text").stringValue());
-				}
-			}
-		}
-		if (text.isEmpty()) {
-			throw unavailable();
-		}
-		JsonNode draft = objectMapper.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-			.readTree(text.toString());
-		if (draft == null || !draft.isObject() || !Set.copyOf(draft.propertyNames()).equals(FIELDS)) {
-			throw unavailable();
-		}
-		for (String field : FIELDS) {
-			if (!draft.path(field).isString()) {
-				throw unavailable();
-			}
-		}
-		return new GenerateStoryDraftResponse(draft.get("title").stringValue(), draft.get("summary").stringValue(),
-			draft.get("setting").stringValue(), draft.get("characters").stringValue(),
-			StoryCategory.valueOf(draft.get("category").stringValue()), draft.get("coreEvent").stringValue());
 	}
 
 	private Map<String, Object> schema() {

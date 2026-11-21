@@ -2,6 +2,7 @@ package org.sopt.sopkathon.infrastructure.openai;
 
 import java.net.http.HttpClient;
 import org.sopt.sopkathon.domain.story.service.StoryDraftGenerator;
+import org.sopt.sopkathon.domain.story.service.StoryOpeningGenerator;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 @EnableConfigurationProperties(OpenAiProperties.class)
 public class OpenAiConfig {
 	@Bean
-	StoryDraftGenerator storyDraftGenerator(OpenAiProperties properties, ObjectMapper objectMapper) {
+	OpenAiResponsesClient openAiResponsesClient(OpenAiProperties properties, ObjectMapper objectMapper) {
 		if (properties.getConnectTimeout() == null || properties.getConnectTimeout().isZero()
 			|| properties.getConnectTimeout().isNegative() || properties.getReadTimeout() == null
 			|| properties.getReadTimeout().isZero() || properties.getReadTimeout().isNegative()
@@ -25,6 +26,16 @@ public class OpenAiConfig {
 		requestFactory.setReadTimeout(properties.getReadTimeout());
 		RestClient client = RestClient.builder().baseUrl("https://api.openai.com/v1")
 			.requestFactory(requestFactory).build();
-		return new OpenAiStoryDraftGenerator(client, properties, objectMapper);
+		return new OpenAiResponsesClient(client, properties, objectMapper);
+	}
+
+	@Bean
+	StoryDraftGenerator storyDraftGenerator(OpenAiResponsesClient responses) {
+		return new OpenAiStoryDraftGenerator(responses);
+	}
+
+	@Bean
+	StoryOpeningGenerator storyOpeningGenerator(OpenAiResponsesClient responses, ObjectMapper objectMapper) {
+		return new OpenAiStoryOpeningGenerator(responses, objectMapper);
 	}
 }
