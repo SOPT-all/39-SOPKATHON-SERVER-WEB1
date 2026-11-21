@@ -1,8 +1,14 @@
 spring:
   jpa:
+    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
     show-sql: false
+
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
 
   datasource:
     url: ${DB_URL}
