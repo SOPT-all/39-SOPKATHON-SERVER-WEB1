@@ -4,3 +4,7 @@ spring:
 
 server:
   forward-headers-strategy: framework
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173,https://39-sopkathon-web-web-1.vercel.app
