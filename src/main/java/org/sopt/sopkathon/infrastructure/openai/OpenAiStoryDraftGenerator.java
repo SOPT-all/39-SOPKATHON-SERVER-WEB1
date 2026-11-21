@@ -10,9 +10,7 @@ import org.sopt.sopkathon.domain.story.entity.StoryCategory;
 import org.sopt.sopkathon.domain.story.service.StoryDraftGenerator;
 import org.sopt.sopkathon.global.exception.BusinessException;
 import org.sopt.sopkathon.global.response.ErrorCode;
-import org.springframework.web.client.RestClient;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor
 public class OpenAiStoryDraftGenerator implements StoryDraftGenerator {
@@ -33,10 +31,6 @@ public class OpenAiStoryDraftGenerator implements StoryDraftGenerator {
 		""";
 
 	private final OpenAiResponsesClient responses;
-
-	public OpenAiStoryDraftGenerator(RestClient client, OpenAiProperties properties, ObjectMapper objectMapper) {
-		this(new OpenAiResponsesClient(client, properties, objectMapper));
-	}
 
 	@Override
 	public GenerateStoryDraftResponse generate(String transcript) {

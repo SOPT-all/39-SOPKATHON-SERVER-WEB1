@@ -11,11 +11,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import java.time.Instant;
-import java.util.Objects;
 import org.sopt.sopkathon.domain.record.entity.Record;
 
 @Entity
