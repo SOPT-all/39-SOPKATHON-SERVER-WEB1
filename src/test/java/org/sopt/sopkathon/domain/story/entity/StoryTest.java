@@ -26,6 +26,27 @@ class StoryTest {
 	private EntityManager entityManager;
 
 	@Test
+	void storesDraftStatusAndLeavesPublicationFieldsEmpty() {
+		Record record = new Record("원문", "draft-uuid");
+		entityManager.persist(record);
+		Story story = Story.draft("제목", StoryCategory.FANTASY, "배경", "소개", "인물", "사건", record);
+		entityManager.persist(story);
+		entityManager.flush();
+		entityManager.clear();
+
+		Story found = entityManager.find(Story.class, story.getId());
+		assertAll(
+			() -> assertEquals(StoryStatus.DRAFT, found.getStatus()),
+			() -> assertNull(found.getPrologue()),
+			() -> assertNull(found.getImageUrl()),
+			() -> assertEquals(record.getId(), found.getRecord().getId()),
+			() -> assertEquals("DRAFT", entityManager.createNativeQuery(
+				"select story_status from story where story_id = :id", String.class)
+				.setParameter("id", found.getId()).getSingleResult())
+		);
+	}
+
+	@Test
 	void savesAndReloadsRecordAndStoryAtColumnLimits() {
 		String original = "녹음 원문".repeat(1000);
 		Record record = new Record(original, "550e8400-e29b-41d4-a716-446655440000");

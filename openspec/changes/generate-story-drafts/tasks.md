@@ -1,11 +1,11 @@
 # Tasks
 
-이 목록은 후속 구현 작업이다. 이번 요청에서는 이슈·브랜치와 ADR·OpenSpec만 작성하며 아래 항목을 완료 처리하지 않는다. 각 기능·검증 단위로 작은 커밋을 유지한다.
+이 목록은 첫 번째 초안 생성 API의 구현 작업이다. 해당 기능과 검증이 완료된 항목만 완료 처리하고 각 기능·검증 단위로 작은 커밋을 유지한다.
 
 ## 1. 초안 도메인과 저장 제약
 
-- [ ] 1.1 StoryStatus(DRAFT/PUBLISHED), 필수 story_status 컬럼과 초안 생성 팩토리를 추가하고 기존 생성자 사용처를 정리한다. 도메인·영속성 테스트로 DRAFT 기본값, 1:1 관계, 첫 장면·이미지 URL의 null 및 기존 매핑 호환성을 확인한다.
-- [ ] 1.2 RecordRepository·StoryRepository와 record_uuid 유일성 제약을 추가하되 기존 길이·nullable 조건을 유지한다. DB 테스트로 동일 UUID 거부와 다른 UUID 저장을 검증하고, 기존 데이터가 있는 경우의 상태 분류·중복 점검 및 스키마 적용 절차를 design.md에 구체화한다.
+- [x] 1.1 StoryStatus(DRAFT/PUBLISHED), 필수 story_status 컬럼과 초안 생성 팩토리를 추가하고 기존 생성자 사용처를 정리한다. 도메인·영속성 테스트로 DRAFT 기본값, 1:1 관계, 첫 장면·이미지 URL의 null 및 기존 매핑 호환성을 확인한다.
+- [x] 1.2 RecordRepository·StoryRepository와 record_uuid 유일성 제약을 추가하되 기존 길이·nullable 조건을 유지한다. DB 테스트로 동일 UUID 거부와 다른 UUID 저장을 검증하고, 기존 데이터가 있는 경우의 상태 분류·중복 점검 및 스키마 적용 절차를 design.md에 구체화한다.
 
 ## 2. OpenAI 초안 생성
 

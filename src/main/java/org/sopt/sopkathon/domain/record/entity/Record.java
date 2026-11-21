@@ -6,12 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Entity
-@Table(name = "record")
+@Table(name = "record", uniqueConstraints = @UniqueConstraint(name = "uk_record_uuid", columnNames = "record_uuid"))
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class Record {
