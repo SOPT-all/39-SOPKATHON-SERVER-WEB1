@@ -52,4 +52,12 @@ public class ApiResponse<T> {
 		);
 	}
 
+	public static ApiResponse<Void> fail(String code, String message) {
+		return new ApiResponse<>(
+			code,
+			message,
+			null
+		);
+	}
+
 }

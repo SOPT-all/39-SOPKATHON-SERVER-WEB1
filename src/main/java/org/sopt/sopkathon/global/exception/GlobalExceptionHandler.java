@@ -7,6 +7,7 @@ import org.sopt.sopkathon.global.response.ErrorCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -60,6 +61,7 @@ public class GlobalExceptionHandler {
 		ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
 		return ResponseEntity
 			.status(errorCode.getHttpStatus())
+			.headers(e.getHeaders())
 			.body(ApiResponse.fail(errorCode));
 	}
 
@@ -68,11 +70,19 @@ public class GlobalExceptionHandler {
 		ErrorCode errorCode = ErrorCode.UNSUPPORTED_MEDIA_TYPE;
 		return ResponseEntity
 			.status(errorCode.getHttpStatus())
+			.headers(e.getHeaders())
 			.body(ApiResponse.fail(errorCode));
 	}
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
+		if (e instanceof ErrorResponse error && error.getStatusCode().is4xxClientError()) {
+			var status = error.getStatusCode();
+			return ResponseEntity.status(status)
+				.headers(error.getHeaders())
+				.body(ApiResponse.fail("HTTP_" + status.value(), "요청을 처리할 수 없습니다."));
+		}
+
 		log.error("처리되지 않은 예외가 발생했습니다.", e);
 		ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
 		return ResponseEntity
