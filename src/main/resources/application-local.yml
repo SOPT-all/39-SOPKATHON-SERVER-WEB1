@@ -8,6 +8,6 @@ spring:
         format_sql: true
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/sopkathon}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/sopkathon?createDatabaseIfNotExist=true}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:test1234}
+    password: ${DB_PASSWORD:}
