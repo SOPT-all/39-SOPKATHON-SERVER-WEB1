@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceException;
+import java.util.UUID;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,6 +25,27 @@ class StoryTest {
 
 	@PersistenceContext
 	private EntityManager entityManager;
+
+	@Test
+	void storesDraftStatusAndLeavesPublicationFieldsEmpty() {
+		Record record = new Record("원문", "draft-uuid");
+		entityManager.persist(record);
+		Story story = Story.draft("제목", StoryCategory.FANTASY, "배경", "소개", "인물", "사건", record);
+		entityManager.persist(story);
+		entityManager.flush();
+		entityManager.clear();
+
+		Story found = entityManager.find(Story.class, story.getId());
+		assertAll(
+			() -> assertEquals(StoryStatus.DRAFT, found.getStatus()),
+			() -> assertNull(found.getPrologue()),
+			() -> assertNull(found.getImageUrl()),
+			() -> assertEquals(record.getId(), found.getRecord().getId()),
+			() -> assertEquals("DRAFT", entityManager.createNativeQuery(
+				"select story_status from story where story_id = :id", String.class)
+				.setParameter("id", found.getId()).getSingleResult())
+		);
+	}
 
 	@Test
 	void savesAndReloadsRecordAndStoryAtColumnLimits() {
@@ -56,13 +78,13 @@ class StoryTest {
 
 	@Test
 	void allowsRecordBeforeStoryAndNullableAttributes() {
-		Record record = new Record(null, null);
+		Record record = new Record(null, UUID.randomUUID().toString());
 		entityManager.persist(record);
 		entityManager.flush();
 		entityManager.clear();
 		Record foundRecord = entityManager.find(Record.class, record.getId());
 		assertNull(foundRecord.getText());
-		assertNull(foundRecord.getUuid());
+		assertEquals(record.getUuid(), foundRecord.getUuid());
 
 		Story story = new Story(null, null, null, null, null, null, null, null, foundRecord);
 		entityManager.persist(story);
@@ -120,7 +142,7 @@ class StoryTest {
 		"20,200,200,100,500,300,301"})
 	void rejectsOverlongStoryFields(int title, int background, int summary, int character,
 		int event, int prologue, int imageUrl) {
-		Record record = new Record(null, null);
+		Record record = new Record(null, UUID.randomUUID().toString());
 		entityManager.persist(record);
 		assertThrows(PersistenceException.class, () -> {
 			entityManager.persist(new Story("제".repeat(title), null, "배".repeat(background),
@@ -133,7 +155,7 @@ class StoryTest {
 	@ParameterizedTest
 	@EnumSource(StoryCategory.class)
 	void storesCategoryAsString(StoryCategory category) {
-		Record record = new Record(null, null);
+		Record record = new Record(null, UUID.randomUUID().toString());
 		entityManager.persist(record);
 		Story story = new Story(null, category, null, null, null, null, null, null, record);
 		entityManager.persist(story);
