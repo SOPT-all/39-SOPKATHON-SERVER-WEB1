@@ -3,6 +3,7 @@ package org.sopt.sopkathon.global.response;
 import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
+	STORY_NOT_FOUND("STORY_NOT_FOUND", "이야기를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 	INVALID_REQUEST_BODY("INVALID_REQUEST_BODY", "요청 본문의 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 	INVALID_PARAMETER("INVALID_PARAMETER", "요청 파라미터의 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 	INVALID_INPUT("INVALID_INPUT", "입력값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
