@@ -10,6 +10,7 @@ import org.sopt.sopkathon.domain.chat.entity.ChatType;
 import org.sopt.sopkathon.domain.context.entity.Context;
 import org.sopt.sopkathon.domain.context.entity.ContextType;
 import org.sopt.sopkathon.domain.story.entity.Story;
+import org.sopt.sopkathon.domain.story.entity.StoryStatus;
 import org.sopt.sopkathon.global.exception.BusinessException;
 import org.sopt.sopkathon.global.response.ErrorCode;
 import org.springframework.stereotype.Repository;
@@ -23,7 +24,8 @@ class MessageStore {
 	private final EntityManager em;
 
 	public void checkLatest(long storyId, long seen) {
-		if (em.find(Story.class, storyId) == null) {
+		Story story = em.find(Story.class, storyId);
+		if (story == null || story.getStatus() != StoryStatus.PUBLISHED) {
 			throw new BusinessException(ErrorCode.STORY_NOT_FOUND);
 		}
 		Long latest = em.createQuery("select max(c.id) from Chat c where c.story.id = :id", Long.class)

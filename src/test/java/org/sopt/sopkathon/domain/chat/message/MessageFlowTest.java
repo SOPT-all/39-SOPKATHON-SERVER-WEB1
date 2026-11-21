@@ -1,6 +1,7 @@
 package org.sopt.sopkathon.domain.chat.message;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -129,6 +130,8 @@ class MessageFlowTest {
 		em.persist(record);
 		Story story = new Story("제목", null, "숲", null, "여우", "다리에서 만남", "초안 문구", null, record);
 		em.persist(story);
+		jdbc.update("update story set story_status = 'PUBLISHED' where story_id = ?", story.getId());
+		em.refresh(story);
 		return story;
 	}
 
@@ -225,6 +228,34 @@ class MessageFlowTest {
 		assertEquals(1, countState());
 	}
 
+	private JsonNode history() throws Exception {
+		var response = mvc.perform(get("/api/v1/stories/{storyId}/messages", storyId))
+			.andReturn().getResponse();
+		assertEquals(200, response.getStatus());
+		return JSON.readTree(response.getContentAsByteArray()).at("/data/messages");
+	}
+
+	@Test
+	void resumesFromHistoryAfterCorrectionAndReadsBackTheCommittedTurn() throws Exception {
+		JsonNode opening = history();
+		assertEquals(1, opening.size());
+		long seen = opening.get(0).get("messageId").asLong();
+		replies.add("{\"passed\":false,\"feedback\":\"따라갈래요라고 써 봐요.\"}");
+		scene("폐기 장면", null, List.of());
+		JsonNode correction = send(storyId, seen, "따라갈레요", 200).at("/data/messages");
+		sceneInput();
+		assertEquals("CHAT_OUTDATED", send(storyId, seen, "따라갈래요", 409).get("code").asString());
+
+		JsonNode refreshed = history();
+		assertEquals(JSON.valueToTree(List.of(opening.get(0), correction.get(0), correction.get(1))), refreshed);
+		passCorrection();
+		scene("여우가 다리에서 기다린다.", null, List.of());
+		long feedbackId = refreshed.get(2).get("messageId").asLong();
+		JsonNode progress = send(storyId, feedbackId, "따라갈래요", 200).at("/data/messages");
+		assertEquals(JSON.valueToTree(List.of(opening.get(0), correction.get(0), correction.get(1),
+			progress.get(0), progress.get(1))), history());
+	}
+
 	@Test
 	void openingIsIncludedAtTenTurnsAndDropsOutAtEleven() throws Exception {
 		long latest = tx.execute(status -> {
@@ -252,6 +283,17 @@ class MessageFlowTest {
 			assertEquals(i == 10 ? OPENING : null, input.get("openingScene").asString(null));
 			assertEquals(JSON.valueToTree(List.of(EVENT)), input.get("events"));
 		}
+	}
+
+	@Test
+	void rejectsDraftBeforeCheckingLastMessageOrCallingEitherModel() throws Exception {
+		jdbc.update("update story set story_status = 'DRAFT' where story_id = ?", storyId);
+		for (long seen : List.of(openingId, openingId + 1)) {
+			assertEquals("STORY_NOT_FOUND", send(storyId, seen, "따라갈래요", 404).get("code").asString());
+		}
+		assertTrue(requests.isEmpty());
+		assertTrue(sceneRequests.isEmpty());
+		assertEquals(1, countChats());
 	}
 
 	@Test
