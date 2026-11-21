@@ -2,6 +2,7 @@ package org.sopt.sopkathon.domain.story.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import java.nio.charset.StandardCharsets;
@@ -11,6 +12,8 @@ import java.util.TreeSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.sopt.sopkathon.domain.record.entity.Record;
 import org.sopt.sopkathon.domain.record.repository.RecordRepository;
 import org.sopt.sopkathon.domain.story.entity.Story;
@@ -89,6 +92,57 @@ class StoryControllerTest {
 		assertEquals(Set.of("storyId", "title", "summary", "imageUrl", "category"),
 			new TreeSet<>(item.propertyNames()));
 		assertFalse(body.contains("secret"));
+	}
+
+	@Test
+	void returnsPublishedStoryDetailWithPublicFieldsOnly() throws Exception {
+		Story story = save("공개", StoryCategory.FANTASY, StoryStatus.PUBLISHED, "hidden-uuid");
+
+		MockHttpServletResponse response = mvc.perform(get("/api/v1/stories/{storyId}", story.getId()))
+			.andReturn().getResponse();
+		String body = response.getContentAsString(StandardCharsets.UTF_8);
+		JsonNode root = JSON.readTree(body);
+		JsonNode data = root.get("data");
+
+		assertEquals(200, response.getStatus());
+		assertEquals("SUCCESS", root.get("code").asString());
+		assertEquals(Set.of("storyId", "title", "summary", "imageUrl", "category", "setting", "characters"),
+			new TreeSet<>(data.propertyNames()));
+		assertEquals(story.getId(), data.get("storyId").asLong());
+		assertEquals("FANTASY", data.get("category").asString());
+		assertEquals("secret-background", data.get("setting").asString());
+		assertEquals("secret-character", data.get("characters").asString());
+		assertFalse(body.contains("secret-event"));
+		assertFalse(body.contains("secret-prologue"));
+		assertFalse(body.contains("secret-transcript"));
+		assertFalse(body.contains("hidden-uuid"));
+	}
+
+	@Test
+	void hidesDraftStoryDetail() throws Exception {
+		Story draft = save("초안", StoryCategory.ETC, StoryStatus.DRAFT, "draft-uuid");
+
+		assertError("/api/v1/stories/" + draft.getId(), 404, "STORY_NOT_FOUND");
+	}
+
+	@Test
+	void returnsNotFoundForMissingStory() throws Exception {
+		assertError("/api/v1/stories/" + Long.MAX_VALUE, 404, "STORY_NOT_FOUND");
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"0", "-1", "abc", "1.5", "9223372036854775808"})
+	void rejectsInvalidStoryId(String storyId) throws Exception {
+		assertError("/api/v1/stories/" + storyId, 400, "INVALID_PARAMETER");
+	}
+
+	private void assertError(String path, int status, String code) throws Exception {
+		MockHttpServletResponse response = mvc.perform(get(path)).andReturn().getResponse();
+		JsonNode root = JSON.readTree(response.getContentAsString(StandardCharsets.UTF_8));
+
+		assertEquals(status, response.getStatus());
+		assertEquals(code, root.get("code").asString());
+		assertTrue(root.get("data").isNull());
 	}
 
 	private String requestStories() throws Exception {

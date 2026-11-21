@@ -23,6 +23,10 @@ app:
     connect-timeout: ${OPENAI_CONNECT_TIMEOUT:5s}
     read-timeout: ${OPENAI_READ_TIMEOUT:60s}
     max-output-tokens: ${OPENAI_MAX_OUTPUT_TOKENS:4096}
+  story-publication:
+    lease: ${STORY_PUBLICATION_LEASE:120s}
+    wait-timeout: ${STORY_PUBLICATION_WAIT_TIMEOUT:75s}
+    poll-interval: ${STORY_PUBLICATION_POLL_INTERVAL:100ms}
   cors:
     allowed-origins: http://localhost:5173,https://39-sopkathon-web-web-1.vercel.app
   chat:
