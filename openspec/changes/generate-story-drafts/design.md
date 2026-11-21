@@ -63,7 +63,7 @@ StoryDraftGenerator 인터페이스가 원문을 받아 여섯 편집 값을 돌
 
 StoryDraftService는 요청 검증 뒤 UUID.randomUUID()로 값을 만들고, 트랜잭션 없이 생성 포트를 호출·검증한다. 별도 빈 StoryDraftWriter의 transactional 메서드에서 Record와 Story(DRAFT)를 함께 저장한다. 같은 클래스 내부 호출로 트랜잭션 프록시를 우회하지 않는다. writer의 커밋이 완료된 뒤에만 외부 성공 응답을 구성한다.
 
-Record.text에는 최초 원문, Record.uuid에는 표준 UUID 문자열을 넣는다. record_uuid의 기존 varchar(255)와 nullable 조건은 유지하면서 유일성 제약을 추가한다. 이 API 경로는 null UUID를 생성하지 않는다. Story는 필수 1:1 Record 관계와 생성 결과를 가지며 story_status에는 EnumType.STRING으로 DRAFT를 저장한다. 공개 확정을 위한 PUBLISHED 값은 정의하되 전환 로직은 후속 API에서 구현한다.
+Record.text에는 최초 원문, Record.uuid에는 표준 UUID 문자열을 넣는다. record_uuid는 기존 varchar(255) 길이를 유지하면서 NOT NULL과 유일성 제약을 적용한다. 원문(record_text)의 null 허용 조건은 유지한다. 이 API 경로는 null UUID를 생성하지 않는다. Story는 필수 1:1 Record 관계와 생성 결과를 가지며 story_status에는 EnumType.STRING으로 DRAFT를 저장한다. 공개 확정을 위한 PUBLISHED 값은 정의하되 전환 로직은 후속 API에서 구현한다.
 
 새 초안을 생성하는 도메인 팩토리로 DRAFT 상태와 prologue/imageUrl의 null을 명확히 한다. 상태는 null을 허용하지 않고, 기존 생성자 사용처와 테스트도 새 기본 상태와 호환되게 정리한다. Chat이나 Context는 만들지 않는다. UUID 중복·이야기 저장 오류·커밋 오류는 부분 저장을 남기지 않는다.
 
@@ -85,14 +85,16 @@ Record.text에는 최초 원문, Record.uuid에는 표준 UUID 문자열을 넣�
 
 ## Migration Plan
 
-1. 구현 시 새 H2/MySQL 스키마에서 story_status와 UUID 유일성을 확인한다. 기존 DB는 공개 이력·첫 메시지 유무와 UUID 중복을 먼저 점검한다.
-2. 기존 데이터가 있다면 이미 공개된 이야기와 미완성 데이터를 구분하여 상태를 채운 뒤 NOT NULL을 적용하고, UUID 중복 해결 후 유일성 제약을 적용한다. 일괄 PUBLISHED 처리나 데이터 삭제는 자동화하지 않는다.
+1. 구현 시 새 H2/MySQL 스키마에서 story_status와 UUID의 NOT NULL·유일성을 확인한다. 기존 DB는 공개 이력·첫 메시지 유무와 UUID 누락·중복을 먼저 점검한다.
+2. 기존 데이터가 있다면 이미 공개된 이야기와 미완성 데이터를 구분하여 상태를 채운 뒤 NOT NULL을 적용한다. UUID가 null인 행은 연결된 이야기와 등록 이력을 확인하여 개별적으로 값을 보완하고, 누락·중복이 해결된 뒤 UUID의 NOT NULL과 유일성 제약을 적용한다. 일괄 PUBLISHED 처리나 데이터 삭제는 자동화하지 않는다.
 3. API 키와 구조화 출력 지원 모델은 환경에 주입하고 실연동은 담당자가 확인한다. 운영 DB의 DDL 적용과 키 등록은 별도로 수행하며 애플리케이션이 이를 자동 실행하지 않는다.
 4. 문제 발생 시 초안 API 배포를 되돌린다. 추가 상태·원문은 보존하며 스키마나 생성된 초안을 자동 삭제하지 않는다.
 
-기존 MySQL DB에서는 다음 읽기 전용 조회로 UUID 중복과 이야기별 첫 메시지를 먼저 확인한다.
+기존 MySQL DB에서는 다음 읽기 전용 조회로 UUID 누락·중복과 이야기별 첫 메시지를 먼저 확인한다.
 
 ```sql
+SELECT record_id FROM `record` WHERE record_uuid IS NULL;
+
 SELECT record_uuid, COUNT(*) AS count
 FROM `record` WHERE record_uuid IS NOT NULL
 GROUP BY record_uuid HAVING COUNT(*) > 1;
@@ -105,4 +107,4 @@ FROM story s;
 
 상태 컬럼이 아직 없다면 `ALTER TABLE story ADD COLUMN story_status ENUM('DRAFT','PUBLISHED') NULL`로 추가한다. 운영자가 각 이야기의 실제 공개 여부를 검토하여 명시적인 ID 기준으로 값을 채운다. `SELECT story_id FROM story WHERE story_status IS NULL` 결과가 없어야 `ALTER TABLE story MODIFY COLUMN story_status ENUM('DRAFT','PUBLISHED') NOT NULL`을 적용한다. 원문 내용·이야기 ID·채팅 기록은 변경하지 않는다.
 
-UUID 중복이 해결된 뒤 기존 인덱스와 `SHOW CREATE TABLE record`를 확인하고, 같은 제약이 없을 때 `ALTER TABLE record ADD CONSTRAINT uk_record_uuid UNIQUE(record_uuid)`를 적용한다. record_uuid의 varchar(255)와 null 허용 조건은 유지한다. 이 절차는 수동 적용 가이드이며 운영 DB에 실행하거나 검증한 결과가 아니다.
+UUID 누락·중복이 해결된 뒤 기존 인덱스와 `SHOW CREATE TABLE record`를 확인한다. 아직 null을 허용한다면 `ALTER TABLE record MODIFY COLUMN record_uuid VARCHAR(255) NOT NULL`을 적용하고, 같은 유일성 제약이 없을 때 `ALTER TABLE record ADD CONSTRAINT uk_record_uuid UNIQUE(record_uuid)`를 적용한다. record_uuid의 varchar(255)와 record_text의 null 허용 조건은 유지한다. 이 절차는 수동 적용 가이드이며 운영 DB에 실행하거나 검증한 결과가 아니다.
