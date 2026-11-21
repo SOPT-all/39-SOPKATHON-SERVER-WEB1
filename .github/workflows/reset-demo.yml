@@ -1,0 +1,63 @@
+name: 시연 DB 초기화
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 데이터 미리보기 또는 전체 초기화
+        type: choice
+        options: [preview, reset]
+        default: preview
+        required: true
+      confirm:
+        description: 초기화할 때만 RESET-DEMO 입력
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      MODE: ${{ inputs.mode }}
+      CONFIRM: ${{ inputs.confirm }}
+      DB_TARGET: ${{ vars.DEMO_DB_TARGET }}
+      RELEASE_IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: 대상 확인
+        run: |
+          test -n "$DB_TARGET" || { echo 'DEMO_DB_TARGET 변수를 등록하세요.'; exit 1; }
+          [[ "$MODE" == preview || ( "$MODE" == reset && "$CONFIRM" == RESET-DEMO ) ]]
+      - name: 배포 버전의 초기화 스크립트와 시드 준비
+        run: |
+          cat > "$RUNNER_TEMP/reset-command" <<'SCRIPT'
+          set -eu
+          umask 077
+          job_dir=$(mktemp -d)
+          trap 'rm -rf "$job_dir"' EXIT
+          cd "$job_dir"
+          base64 -d <<'PAYLOAD' | tar -xz
+          SCRIPT
+          tar -czf - scripts/reset_demo.py src/main/resources/data.sql | base64 >> "$RUNNER_TEMP/reset-command"
+          cat >> "$RUNNER_TEMP/reset-command" <<'SCRIPT'
+          PAYLOAD
+          python3 scripts/reset_demo.py
+          SCRIPT
+      - name: EC2 시연 DB 작업
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: MODE,DB_TARGET,RELEASE_IMAGE
+          script_path: ${{ runner.temp }}/reset-command
