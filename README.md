@@ -22,3 +22,11 @@
 ## 설계 결정
 
 기존 선택의 이유는 [결정 기록](docs/adr/)에서 확인한다. 결정 검색·제안·대체 또는 Codex MCP 설정이 필요하면 [ADR 사용법](docs/adr-guide.md)을 참고한다.
+
+## 변경 명세
+
+OpenSpec을 쓰는 팀원은 Node.js 20.19 이상에서 `npm install -g @fission-ai/openspec@1.14.3`을 한 번 실행한다. 프로젝트 루트에서 `openspec list`로 진행 중인 변경을 확인한다. [Codex Skills](.agents/skills/)와 [한국어 산출물 설정](openspec/config.yaml)은 저장소에서 공유한다.
+
+1. **제안** — Codex에 새 기능이나 계약 변경을 설명하면 `$openspec-propose`로 변경 범위·시나리오·작업 목록을 작성한다. 팀 노션의 API 명세는 링크하고 이번 변경 사항만 적는다.
+2. **구현** — 제안을 확인한 후 `$openspec-apply-change`로 구현을 요청한다. `openspec validate <변경명> --strict`로 명세 형식을 검사하고, 동작은 Gradle 테스트로 검증한다.
+3. **마무리** — 검증한 변경은 `$openspec-archive-change`로 현재 명세에 반영하고 보관한다. 구현 전 범위가 바뀌면 `$openspec-update-change`로 제안을 갱신한다.
