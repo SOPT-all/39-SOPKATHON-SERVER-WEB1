@@ -84,11 +84,16 @@ jobs:
           envs: IMAGE,GHCR_USER,GHCR_TOKEN
           script: |
             set -e
+            cat > ~/sopkathon.env <<'EOF'
+            ${{ secrets.APP_ENV }}
+            EOF
+            chmod 600 ~/sopkathon.env
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             docker pull "$IMAGE"
             docker rm -f sopkathon 2>/dev/null || true
             docker run -d --name sopkathon --restart unless-stopped \
               -p 127.0.0.1:8080:8080 \
+              --env-file ~/sopkathon.env \
               "$IMAGE"
             docker logout ghcr.io
             docker image prune -f
