@@ -5,11 +5,11 @@
 ## 1. 계약과 처리 권한
 
 - [x] 1.1 CreateStoryRequest와 검증된 최종값, UUID·필드 타입·공백·길이·카테고리 검증, 고정 순서 본문 해시를 구현한다. 단위 테스트로 JSON 순서 독립성·원문 포함·경계·각 오류 코드를 확인한다.
-- [ ] 1.2 Story의 해시·토큰·만료, 잠금/관찰 repository, Clock·유한 대기 설정과 coordinator를 구현한다. 처리 권한·공개 재사용·충돌·원문 불일치·소유권과 만료 조건을 테스트한다.
+- [x] 1.2 Story의 해시·토큰·만료, 잠금/관찰 repository, Clock·유한 대기 설정과 coordinator를 구현한다. 처리 권한·공개 재사용·충돌·원문 불일치·소유권과 만료 조건을 테스트한다.
 
 ## 2. 생성과 원자적 확정
 
-- [ ] 2.1 OpenAI 공통 통신을 재사용하도록 분리하고 StoryOpeningGenerator의 strict scene/question 출력·유효성 검증을 구현한다. 대역 HTTP 테스트로 최종값 전달·잘못된 결과·실패 변환을 확인하고 첫 API의 기존 테스트를 유지한다.
+- [x] 2.1 OpenAI 공통 통신을 재사용하도록 분리하고 StoryOpeningGenerator의 strict scene/question 출력·유효성 검증을 구현한다. 대역 HTTP 테스트로 최종값 전달·잘못된 결과·실패 변환을 확인하고 첫 API의 기존 테스트를 유지한다.
 - [ ] 2.2 ChatRepository와 별도 transactional 확정 writer, 트랜잭션 밖 생성·대기 orchestration을 구현한다. 테스트로 원문·ID 유지, 최종값·메시지·상태의 원자적 반영과 토큰 정리를 확인한다.
 
 ## 3. HTTP와 통합 검증
