@@ -1,4 +1,8 @@
 spring:
+  config:
+    import:
+      - classpath:prompts/correction.yml
+      - classpath:prompts/scene.yml
   application:
     name: sopkathon
   profiles:
@@ -11,6 +15,9 @@ server:
 
 app:
   openai:
+    base-url: https://api.openai.com/v1
+    connect-timeout-ms: 5000
+    read-timeout-ms: 60000
     api-key: ${OPENAI_API_KEY:}
     model: ${OPENAI_MODEL:}
     connect-timeout: ${OPENAI_CONNECT_TIMEOUT:5s}
@@ -22,3 +29,6 @@ app:
     poll-interval: ${STORY_PUBLICATION_POLL_INTERVAL:100ms}
   cors:
     allowed-origins: http://localhost:5173,https://39-sopkathon-web-web-1.vercel.app
+  chat:
+    correction-instructions: ${TERRA_INSTRUCTIONS:${app.chat.default-correction-instructions}}
+    scene-instructions: ${ASTRA_INSTRUCTIONS:${app.chat.default-scene-instructions}}
