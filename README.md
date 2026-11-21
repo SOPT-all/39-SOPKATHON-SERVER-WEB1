@@ -57,6 +57,10 @@ Content-Type: application/json
 
 자동 테스트는 H2와 대역 HTTP 서버·클라이언트를 사용하므로 실제 OpenAI 키나 외부 호출 없이 `.\gradlew.bat test`로 실행할 수 있다. 실제 모델의 원문 보존·소개문 품질은 키와 모델 등록 후 대표 원문으로 별도 확인한다.
 
+## 학생 메시지 API 실행 설정
+
+`POST /api/v1/stories/{storyId}/messages`는 Spring Boot 실행 환경의 `OPENAI_API_KEY`를 사용한다. 로컬에서는 프로젝트 루트의 `.env`에 `OPENAI_API_KEY=값`을 입력하거나 실행 환경변수로 지정한다. EC2 배포에서는 GitHub Actions의 별도 `OPENAI_API_KEY` 시크릿을 컨테이너에 전달한다. [교정 지침](src/main/resources/prompts/correction.yml)과 [장면 생성 지침](src/main/resources/prompts/scene.yml)은 같은 학생 원문으로 Luna에 병렬로 전달한다. 교정이 필요하면 장면 생성을 기다리지 않고 피드백만 반환하며, 수정 후 전송은 새 입력으로 처리한다. 기존 환경 변수 `TERRA_INSTRUCTIONS`(교정)와 `ASTRA_INSTRUCTIONS`(장면)를 지정하면 각 기본 지침을 교체한다. 테스트는 로컬 HTTP 대역으로 실행한다. 호출 분리와 기억 저장 방식의 배경은 [ADR 0003](docs/adr/0003-공유-이야기의-교정과-장면-생성을-분리한다.md)를 참고한다.
+
 ## 팀 협업
 
 1. 담당자와 진행을 공유할 기능·버그는 이슈에 작업 내용, 완료 기준과 담당자를 남긴다. 버그는 재현 방법과 기대 동작도 적는다. 리뷰 반영과 오탈자는 진행 중인 PR에서 처리한다.
