@@ -21,6 +21,7 @@ dependencies {
 	// 웹 MVC와 요청 데이터 검증
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
 
 	// 웹 MVC와 데이터 검증 테스트
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'

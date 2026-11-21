@@ -1,0 +1,121 @@
+package org.sopt.sopkathon.global.exception;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sopt.sopkathon.global.response.ApiResponse;
+import org.sopt.sopkathon.global.response.ErrorCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.util.List;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+	@ExceptionHandler(BusinessException.class)
+	public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
+		ErrorCode errorCode = e.getErrorCode();
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+		ErrorCode errorCode = ErrorCode.INVALID_REQUEST_BODY;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+		ErrorCode errorCode = ErrorCode.INVALID_PARAMETER;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(NoResourceFoundException.class)
+	public ResponseEntity<ApiResponse<Void>> handleNoResourceFoundException(NoResourceFoundException e) {
+		ErrorCode errorCode = ErrorCode.RESOURCE_NOT_FOUND;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	public ResponseEntity<ApiResponse<Void>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+		ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.headers(e.getHeaders())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+	public ResponseEntity<ApiResponse<Void>> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
+		ErrorCode errorCode = ErrorCode.UNSUPPORTED_MEDIA_TYPE;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.headers(e.getHeaders())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
+		if (e instanceof ErrorResponse error && error.getStatusCode().is4xxClientError()) {
+			var status = error.getStatusCode();
+			return ResponseEntity.status(status)
+				.headers(error.getHeaders())
+				.body(ApiResponse.fail("HTTP_" + status.value(), "요청을 처리할 수 없습니다."));
+		}
+
+		log.error("처리되지 않은 예외가 발생했습니다.", e);
+		ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+		ErrorCode errorCode = ErrorCode.INVALID_INPUT;
+		List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
+		String message = fieldErrors.isEmpty()
+			? errorCode.getMessage()
+			: fieldErrors.get(0).getDefaultMessage();
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode, message));
+	}
+
+	@ExceptionHandler(HandlerMethodValidationException.class)
+	public ResponseEntity<ApiResponse<Void>> handleHandlerMethodValidationException(HandlerMethodValidationException e) {
+		ErrorCode errorCode = ErrorCode.INVALID_INPUT;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
+		ErrorCode errorCode = ErrorCode.INVALID_PARAMETER;
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(ApiResponse.fail(errorCode));
+	}
+}
+
