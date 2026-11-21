@@ -10,6 +10,16 @@
 | 테스트 | `./gradlew test` |
 | PR과 동일한 빌드·테스트 | `./gradlew clean build` |
 
+JPA는 공통으로 `open-in-view: false`를 사용한다. 엔티티의 지연 로딩과 응답 DTO 변환은 필요한 서비스 트랜잭션 안에서 처리한다.
+
+| 프로파일 | 스키마 설정 | SQL 출력 |
+| --- | --- | --- |
+| local | `ddl-auto: update` — 엔티티 변경을 개발 DB에 반영 | 실행 SQL을 포맷하여 출력 |
+| prod | `ddl-auto: validate` — 기존 스키마를 검사하며 자동 변경하지 않음 | 출력하지 않음 |
+| test | `ddl-auto: create-drop` — H2 테스트 스키마 생성·정리 | 테스트 설정 사용 |
+
+운영 프로파일은 필요한 테이블·컬럼·제약을 별도 적용한 뒤 실행하며 스키마 검증에 실패하면 기동하지 않는다. NOT NULL·유일성 제약도 DDL로 별도 적용·확인한다. SQL 바인딩 값 로깅은 활성화하지 않는다.
+
 ## 이야기 초안 생성
 
 `POST /api/v1/story-drafts`는 브라우저에서 확정한 텍스트를 JSON으로 받는다. 원문은 유니코드 코드 포인트 기준 최대 5,000자이며 숫자·빈 값·공백뿐인 값은 허용하지 않는다. 성공 시 원문과 UUID를 Record에, 편집용 결과를 Story의 DRAFT 상태로 함께 저장하고 200 SUCCESS로 반환한다. 이 단계에서는 첫 장면·이미지·채팅을 생성하지 않는다.
@@ -37,12 +47,12 @@ Content-Type: application/json
 {"transcript":"해질 무렵 소나무 숲에서 토끼가 열쇠를 이러버렸어요. 여우를 따라가 풀잎 아래서 열쇠를 찾았어요."}
 ```
 
-기존 DB에는 story_status와 record_uuid의 NOT NULL·유일성 제약을 별도로 적용해야 한다. 데이터 분류·UUID 누락·중복 점검과 DDL 적용 순서는 [초안 생성 설계의 Migration Plan](openspec/changes/generate-story-drafts/design.md#migration-plan)을 따른다. 새 개발 DB의 스키마 자동 생성은 로컬 실행에만 명시적으로 사용한다.
+기존 DB에는 story_status와 record_uuid의 NOT NULL·유일성 제약을 별도로 적용해야 한다. 데이터 분류·UUID 누락·중복 점검과 DDL 적용 순서는 [초안 생성 설계의 Migration Plan](openspec/changes/generate-story-drafts/design.md#migration-plan)을 따른다. 로컬의 `update`도 기존 데이터 분류나 UUID 누락·중복 해결을 대신하지 않는다.
 
-비어 있는 새 로컬 개발 DB에 한해 다음처럼 엔티티 기반 스키마 생성을 활성화할 수 있다.
+로컬은 `update`가 기본 적용되므로 다음처럼 실행한다. 운영 DB를 DB_URL에 지정한 상태로 local 프로파일을 실행하지 않는다.
 
 ```powershell
-.\gradlew.bat bootRun --args="--spring.profiles.active=local --spring.jpa.hibernate.ddl-auto=update"
+.\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
 자동 테스트는 H2와 대역 HTTP 서버·클라이언트를 사용하므로 실제 OpenAI 키나 외부 호출 없이 `.\gradlew.bat test`로 실행할 수 있다. 실제 모델의 원문 보존·소개문 품질은 키와 모델 등록 후 대표 원문으로 별도 확인한다.

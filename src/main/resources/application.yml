@@ -3,6 +3,8 @@ spring:
     name: sopkathon
   profiles:
     default: local
+  jpa:
+    open-in-view: false
 
 server:
   forward-headers-strategy: framework
