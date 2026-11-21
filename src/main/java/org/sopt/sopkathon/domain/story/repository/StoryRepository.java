@@ -1,6 +1,7 @@
 package org.sopt.sopkathon.domain.story.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.sopt.sopkathon.domain.story.entity.Story;
 import org.sopt.sopkathon.domain.story.entity.StoryStatus;
@@ -25,4 +26,6 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
 	Optional<PublicationSnapshot> publicationSnapshot(@Param("uuid") String uuid);
 
 	List<Story> findAllByStatusOrderByIdDesc(StoryStatus status);
+
+	Optional<Story> findByIdAndStatus(Long id, StoryStatus status);
 }
