@@ -8,6 +8,7 @@
 
 - [x] 2.1 Record, Story, StoryCategory를 구현하고 저장·조회, 길이 제한 및 필수 녹음의 일대일 관계와 중복 참조 거부를 영속성 테스트로 확인한다.
 - [x] 2.2 확인된 ChatType(STUDENT/STORY/FEEDBACK), ContextType(CHARACTER/EVENT)과 Chat, Context를 구현하여 같은 세계관의 복수 하위 데이터·문자열 타입·필수 FK를 테스트한다.
+- [x] 2.3 갱신 ERD의 story_category 컬럼명과 story_summary(200자), image_url(300자)을 엔티티·생성자에 반영하고 영속화·null 허용·경계 길이와 초과 거부를 테스트한다.
 
 ## 3. 통합 검증
 

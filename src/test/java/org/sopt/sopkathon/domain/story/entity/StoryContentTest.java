@@ -132,7 +132,7 @@ class StoryContentTest {
 	private Story persistStory() {
 		Record record = new Record("녹음 원문", "record-uuid");
 		entityManager.persist(record);
-		Story story = new Story("세계관", StoryCategory.FANTASY, null, null, null, null, record);
+		Story story = new Story("세계관", StoryCategory.FANTASY, null, null, null, null, null, null, record);
 		entityManager.persist(story);
 		return story;
 	}

@@ -31,7 +31,8 @@ class StoryTest {
 		Record record = new Record(original, "550e8400-e29b-41d4-a716-446655440000");
 		entityManager.persist(record);
 		Story story = new Story("제".repeat(20), StoryCategory.FANTASY, "배".repeat(200),
-			"인".repeat(100), "사".repeat(500), "첫".repeat(300), record);
+			"요".repeat(200), "인".repeat(100), "사".repeat(500), "첫".repeat(300),
+			"https://example.com/" + "a".repeat(280), record);
 		entityManager.persist(story);
 		entityManager.flush();
 		entityManager.clear();
@@ -42,9 +43,11 @@ class StoryTest {
 			() -> assertEquals(story.getTitle(), found.getTitle()),
 			() -> assertEquals(story.getCategory(), found.getCategory()),
 			() -> assertEquals(story.getBackground(), found.getBackground()),
+			() -> assertEquals(story.getSummary(), found.getSummary()),
 			() -> assertEquals(story.getCharacter(), found.getCharacter()),
 			() -> assertEquals(story.getEvent(), found.getEvent()),
 			() -> assertEquals(story.getPrologue(), found.getPrologue()),
+			() -> assertEquals(story.getImageUrl(), found.getImageUrl()),
 			() -> assertEquals(record.getId(), found.getRecord().getId()),
 			() -> assertEquals(original, found.getRecord().getText()),
 			() -> assertEquals(record.getUuid(), found.getRecord().getUuid())
@@ -61,7 +64,7 @@ class StoryTest {
 		assertNull(foundRecord.getText());
 		assertNull(foundRecord.getUuid());
 
-		Story story = new Story(null, null, null, null, null, null, foundRecord);
+		Story story = new Story(null, null, null, null, null, null, null, null, foundRecord);
 		entityManager.persist(story);
 		entityManager.flush();
 		entityManager.clear();
@@ -70,9 +73,11 @@ class StoryTest {
 			() -> assertNull(found.getTitle()),
 			() -> assertNull(found.getCategory()),
 			() -> assertNull(found.getBackground()),
+			() -> assertNull(found.getSummary()),
 			() -> assertNull(found.getCharacter()),
 			() -> assertNull(found.getEvent()),
-			() -> assertNull(found.getPrologue())
+			() -> assertNull(found.getPrologue()),
+			() -> assertNull(found.getImageUrl())
 		);
 	}
 
@@ -80,13 +85,13 @@ class StoryTest {
 	void rejectsSecondStoryForSameRecord() {
 		Record record = new Record("원문", "record-1");
 		entityManager.persist(record);
-		entityManager.persist(new Story("첫 세계관", null, null, null, null, null, record));
+		entityManager.persist(new Story("첫 세계관", null, null, null, null, null, null, null, record));
 		entityManager.flush();
 		entityManager.clear();
 		Record existing = entityManager.getReference(Record.class, record.getId());
 
 		assertThrows(ConstraintViolationException.class, () -> {
-			entityManager.persist(new Story("중복 세계관", null, null, null, null, null, existing));
+			entityManager.persist(new Story("중복 세계관", null, null, null, null, null, null, null, existing));
 			entityManager.flush();
 		});
 	}
@@ -94,7 +99,7 @@ class StoryTest {
 	@Test
 	void rejectsStoryWithoutRecord() {
 		assertThrows(PersistenceException.class, () -> {
-			entityManager.persist(new Story("세계관", null, null, null, null, null, null));
+			entityManager.persist(new Story("세계관", null, null, null, null, null, null, null, null));
 			entityManager.flush();
 		});
 	}
@@ -103,20 +108,24 @@ class StoryTest {
 	void rejectsStoryWithNonexistentRecord() {
 		Record missing = entityManager.getReference(Record.class, Long.MAX_VALUE);
 		assertThrows(ConstraintViolationException.class, () -> {
-			entityManager.persist(new Story("세계관", null, null, null, null, null, missing));
+			entityManager.persist(new Story("세계관", null, null, null, null, null, null, null, missing));
 			entityManager.flush();
 		});
 	}
 
 	@ParameterizedTest
-	@CsvSource({"21,200,100,500,300", "20,201,100,500,300", "20,200,101,500,300",
-		"20,200,100,501,300", "20,200,100,500,301"})
-	void rejectsOverlongStoryFields(int title, int background, int character, int event, int prologue) {
+	@CsvSource({"21,200,200,100,500,300,300", "20,201,200,100,500,300,300",
+		"20,200,201,100,500,300,300", "20,200,200,101,500,300,300",
+		"20,200,200,100,501,300,300", "20,200,200,100,500,301,300",
+		"20,200,200,100,500,300,301"})
+	void rejectsOverlongStoryFields(int title, int background, int summary, int character,
+		int event, int prologue, int imageUrl) {
 		Record record = new Record(null, null);
 		entityManager.persist(record);
 		assertThrows(PersistenceException.class, () -> {
 			entityManager.persist(new Story("제".repeat(title), null, "배".repeat(background),
-				"인".repeat(character), "사".repeat(event), "첫".repeat(prologue), record));
+				"요".repeat(summary), "인".repeat(character), "사".repeat(event),
+				"첫".repeat(prologue), "u".repeat(imageUrl), record));
 			entityManager.flush();
 		});
 	}
@@ -126,14 +135,14 @@ class StoryTest {
 	void storesCategoryAsString(StoryCategory category) {
 		Record record = new Record(null, null);
 		entityManager.persist(record);
-		Story story = new Story(null, category, null, null, null, null, record);
+		Story story = new Story(null, category, null, null, null, null, null, null, record);
 		entityManager.persist(story);
 		entityManager.flush();
 		entityManager.clear();
 
 		assertEquals(category, entityManager.find(Story.class, story.getId()).getCategory());
 		assertEquals(category.name(), entityManager.createNativeQuery(
-			"select story_catagory from story where story_id = :id", String.class)
+			"select story_category from story where story_id = :id", String.class)
 			.setParameter("id", story.getId()).getSingleResult());
 	}
 }

@@ -31,11 +31,14 @@ public class Story {
 	private String title;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "story_catagory")
+	@Column(name = "story_category")
 	private StoryCategory category;
 
 	@Column(name = "story_background", length = 200)
 	private String background;
+
+	@Column(name = "story_summary", length = 200)
+	private String summary;
 
 	@Column(name = "story_character", length = 100)
 	private String character;
@@ -46,18 +49,23 @@ public class Story {
 	@Column(name = "story_prologue", length = 300)
 	private String prologue;
 
+	@Column(name = "image_url", length = 300)
+	private String imageUrl;
+
 	@OneToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "record_id", nullable = false, unique = true)
 	private Record record;
 
-	public Story(String title, StoryCategory category, String background, String character,
-		String event, String prologue, Record record) {
+	public Story(String title, StoryCategory category, String background, String summary,
+		String character, String event, String prologue, String imageUrl, Record record) {
 		this.title = title;
 		this.category = category;
 		this.background = background;
+		this.summary = summary;
 		this.character = character;
 		this.event = event;
 		this.prologue = prologue;
+		this.imageUrl = imageUrl;
 		this.record = record;
 	}
 }
