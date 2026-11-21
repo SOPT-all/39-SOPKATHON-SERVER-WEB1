@@ -25,7 +25,7 @@ public class Record {
 	@Column(name = "record_text", columnDefinition = "TEXT")
 	private String text;
 
-	@Column(name = "record_uuid")
+	@Column(name = "record_uuid", nullable = false)
 	private String uuid;
 
 	public Record(String text, String uuid) {
