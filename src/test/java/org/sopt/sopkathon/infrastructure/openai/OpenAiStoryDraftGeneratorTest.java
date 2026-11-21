@@ -50,7 +50,7 @@ class OpenAiStoryDraftGeneratorTest {
 		properties = new OpenAiProperties();
 		properties.setApiKey("test-key");
 		properties.setModel("test-model");
-		generator = new OpenAiStoryDraftGenerator(builder.build(), properties, JSON);
+		generator = new OpenAiStoryDraftGenerator(new OpenAiResponsesClient(builder.build(), properties, JSON));
 	}
 
 	@Test

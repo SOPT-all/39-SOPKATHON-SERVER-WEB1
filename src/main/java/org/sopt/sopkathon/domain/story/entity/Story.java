@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +58,15 @@ public class Story {
 	@Column(name = "story_status", nullable = false, length = 20)
 	private StoryStatus status = StoryStatus.DRAFT;
 
+	@Column(name = "publish_request_hash", length = 64)
+	private String publishRequestHash;
+
+	@Column(name = "publish_attempt_token", length = 36)
+	private String publishAttemptToken;
+
+	@Column(name = "publish_attempt_expires_at")
+	private Instant publishAttemptExpiresAt;
+
 	@OneToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "record_id", nullable = false, unique = true)
 	private Record record;
@@ -76,5 +87,42 @@ public class Story {
 	public static Story draft(String title, StoryCategory category, String background, String summary,
 		String character, String event, Record record) {
 		return new Story(title, category, background, summary, character, event, null, null, record);
+	}
+
+	public boolean hasActivePublication(Instant now) {
+		return publishAttemptToken != null && publishAttemptExpiresAt != null && publishAttemptExpiresAt.isAfter(now);
+	}
+
+	public boolean ownsPublication(String hash, String token, Instant now) {
+		return status == StoryStatus.DRAFT && Objects.equals(publishRequestHash, hash)
+			&& Objects.equals(publishAttemptToken, token) && hasActivePublication(now);
+	}
+
+	public void reservePublication(String hash, String token, Instant expiresAt) {
+		publishRequestHash = hash;
+		publishAttemptToken = token;
+		publishAttemptExpiresAt = expiresAt;
+	}
+
+	public void releasePublication(String token) {
+		if (status == StoryStatus.DRAFT && Objects.equals(publishAttemptToken, token)) {
+			publishRequestHash = null;
+			publishAttemptToken = null;
+			publishAttemptExpiresAt = null;
+		}
+	}
+
+	public void publish(String title, String summary, String background, String character,
+		String event, StoryCategory category, String scene) {
+		this.title = title;
+		this.summary = summary;
+		this.background = background;
+		this.character = character;
+		this.event = event;
+		this.category = category;
+		this.prologue = scene;
+		this.status = StoryStatus.PUBLISHED;
+		this.publishAttemptToken = null;
+		this.publishAttemptExpiresAt = null;
 	}
 }
